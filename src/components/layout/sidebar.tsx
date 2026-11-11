@@ -10,8 +10,8 @@ import React, { useState } from 'react';
 import {
   Home,
   Search,
-  Bookmark,
-  Trash2,
+  LayoutDashboard,
+  Zap,
   Share2,
   Settings,
   Sun,
@@ -50,8 +50,8 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
   }[] = [
     { id: 'inbox', label: 'Início', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
     { id: 'contacts', label: 'CRM', icon: Search },
-    { id: 'overview', label: 'Salvos', icon: Bookmark },
-    { id: 'automations', label: 'Lixeira', icon: Trash2 },
+    { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'automations', label: 'Automação', icon: Zap },
     { id: 'integrations', label: 'Canais', icon: Share2 },
     { id: 'settings', label: 'Ajustes', icon: Settings }
   ];

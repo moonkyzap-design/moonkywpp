@@ -135,8 +135,13 @@ export interface AIAgentSettings {
   whatsappEnabled: boolean;
   instagramEnabled: boolean;
   handoffKeywords: string[];
-  provider: 'gemini' | 'openai' | 'anthropic' | 'demo';
+  provider: 'openai' | 'anthropic' | 'perplexity' | 'gemini' | 'demo';
   model: string;
+  apiKey?: string;
+  companyMemory?: string;
+  temperature?: number;
+  maxTokens?: number;
+  strictGroundingOnly?: boolean;
 }
 
 export interface AILogEntry {

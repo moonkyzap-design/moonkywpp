@@ -443,15 +443,34 @@ export const initialAIKnowledge: AIKnowledgeItem[] = [
 
 export const initialAIAgentSettings: AIAgentSettings = {
   name: 'Moonky Intelligence',
-  personality: 'Você é o assistente virtual da Moonky. Seja empático, minimalista e preciso.',
-  instructions: 'Moonky é uma plataforma omnichannel de comunicação unificando WhatsApp e Instagram.',
+  personality: 'Você é o assistente virtual da Moonky. Seja empático, minimalista, educado e extremamente preciso.',
+  instructions: 'Atenda clientes no WhatsApp e Instagram. Use apenas as informações da memória da empresa.',
+  companyMemory: `A Moonky é uma plataforma SaaS omnichannel de ponta que unifica o atendimento de WhatsApp e Instagram Direct em uma única caixa de entrada inteligente.
+
+Planos disponíveis:
+- Plano Starter: R$ 97/mês (2 atendentes, 1 canal WhatsApp).
+- Plano Growth: R$ 297/mês (5 atendentes, 3 canais WhatsApp e Instagram, automações e CRM).
+- Plano Scale: R$ 697/mês (atendentes e canais ilimitados, treinamento dedicado).
+
+Horário de Atendimento Humano:
+- Segunda a sexta das 08h00 às 20h00, sábados das 09h00 às 14h00.
+- Fora desse horário, o assistente de IA responde dúvidas frequentes 24 horas por dia.
+
+Políticas e Segurança:
+- Conexão oficial via Meta Cloud API e pareamento por QR Code.
+- Dados isolados por empresa com segurança de nível bancário e criptografia ponta a ponta.
+- Se o cliente solicitar falar com atendente humano ou você não tiver certeza sobre alguma informação específica, avise educadamente que irá transferir para um especialista da equipe imediatamente.`,
   whatsappEnabled: true,
   instagramEnabled: true,
   handoffKeywords: ['humano', 'atendente', 'falar com pessoa', 'reclamar', 'urgente'],
   confidenceThreshold: 0.85,
   autoReplyEnabled: true,
-  provider: 'gemini',
-  model: 'gemini-1.5-flash'
+  provider: 'openai',
+  model: 'gpt-4o',
+  apiKey: '',
+  temperature: 0.2,
+  maxTokens: 500,
+  strictGroundingOnly: true
 };
 
 export const initialAutomationRules: AutomationRule[] = [
