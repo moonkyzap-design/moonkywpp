@@ -1,19 +1,23 @@
 // ===================================================================
 // SUPABASE CLIENT INITIALIZATION
-// Supports both active Supabase instance and gracefully identified setup mode
+// Preconfigured with awsmysjmittjvgpbopay project and env fallbacks
 // ===================================================================
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+export const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://awsmysjmittjvgpbopay.supabase.co';
+
+export const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'sb_publishable_eNMY4wc3i6tEhky5mUOsiQ_f8rSG7iC';
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(
-    supabaseUrl &&
-    supabaseAnonKey &&
-    supabaseUrl.startsWith('https://') &&
-    !supabaseUrl.includes('your-project')
+    SUPABASE_URL &&
+    SUPABASE_ANON_KEY &&
+    SUPABASE_URL.startsWith('https://') &&
+    !SUPABASE_URL.includes('your-project')
   );
 };
 
@@ -21,9 +25,9 @@ export const createSupabaseClient = () => {
   if (!isSupabaseConfigured()) {
     return null;
   }
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 };
 
 export const supabase = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
