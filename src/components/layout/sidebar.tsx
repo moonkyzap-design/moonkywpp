@@ -38,9 +38,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: SidebarProps) {
-  const { conversations } = useMoonky();
+  const { conversations, isDarkMode, setIsDarkMode } = useMoonky();
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // 6 itens exatos da imagem de referência traduzidos para Português Brasil
   const navItems: {
@@ -50,8 +49,8 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
     badge?: number;
   }[] = [
     { id: 'inbox', label: 'Início', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
-    { id: 'overview', label: 'Buscar', icon: Search },
-    { id: 'contacts', label: 'Salvos', icon: Bookmark },
+    { id: 'contacts', label: 'CRM', icon: Search },
+    { id: 'overview', label: 'Salvos', icon: Bookmark },
     { id: 'automations', label: 'Lixeira', icon: Trash2 },
     { id: 'integrations', label: 'Canais', icon: Share2 },
     { id: 'settings', label: 'Ajustes', icon: Settings }
@@ -131,22 +130,22 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
             title="Modo Claro"
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               !isDarkMode
-                ? 'bg-white text-[#252B28] shadow-xs'
+                ? 'bg-white text-[#252B28] shadow-xs ring-1 ring-[#45D483]/30'
                 : 'text-[#AEB7B3] hover:text-[#252B28]'
             }`}
           >
-            <Sun className="w-3.5 h-3.5 text-[#45D483]" />
+            <Sun className={`w-3.5 h-3.5 ${!isDarkMode ? 'text-[#45D483]' : ''}`} />
           </button>
           <button
             onClick={() => setIsDarkMode(true)}
             title="Modo Escuro"
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               isDarkMode
-                ? 'bg-[#252B28] text-white shadow-xs'
+                ? 'bg-[#45D483] text-[#252B28] shadow-xs ring-1 ring-white/20'
                 : 'text-[#AEB7B3] hover:text-[#252B28]'
             }`}
           >
-            <Moon className="w-3.5 h-3.5" />
+            <Moon className={`w-3.5 h-3.5 ${isDarkMode ? 'text-[#252B28]' : ''}`} />
           </button>
         </div>
 

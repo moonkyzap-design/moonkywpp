@@ -55,6 +55,9 @@ interface MoonkyStoreContextType {
   analytics: AnalyticsSummary;
   isLiveSupabase: boolean;
   isTyping: boolean;
+  isDarkMode: boolean;
+  setIsDarkMode: (val: boolean) => void;
+  toggleDarkMode: () => void;
 
   // Filters
   filterChannel: 'all' | ChannelType;
@@ -103,6 +106,7 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   const [analytics] = useState<AnalyticsSummary>(initialAnalytics);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isLiveSupabase, setIsLiveSupabase] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkModeState] = useState<boolean>(false);
 
   // Filters
   const [filterChannel, setFilterChannel] = useState<'all' | ChannelType>('all');
@@ -113,7 +117,37 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setIsLiveSupabase(isSupabaseConfigured());
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('moonky_theme');
+      if (saved === 'dark') {
+        setIsDarkModeState(true);
+        document.documentElement.classList.add('dark');
+      } else if (saved === 'light') {
+        setIsDarkModeState(false);
+        document.documentElement.classList.remove('dark');
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setIsDarkModeState(true);
+        document.documentElement.classList.add('dark');
+      }
+    }
   }, []);
+
+  const setIsDarkMode = (val: boolean) => {
+    setIsDarkModeState(val);
+    if (typeof document !== 'undefined') {
+      if (val) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('moonky_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('moonky_theme', 'light');
+      }
+    }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const activeConversation =
     conversations.find((c) => c.id === activeConversationId) || conversations[0] || null;
@@ -428,6 +462,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         analytics,
         isLiveSupabase,
         isTyping,
+        isDarkMode,
+        setIsDarkMode,
+        toggleDarkMode,
         filterChannel,
         setFilterChannel,
         filterStatus,

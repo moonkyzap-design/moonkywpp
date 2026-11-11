@@ -230,7 +230,7 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 {/* QR Code Graphic Box */}
                 <div className="flex flex-col items-center justify-center p-6 bg-[#FAFBFB] rounded-3xl border border-[#E5E9E7] text-center space-y-3">
-                  <div className="relative p-4 bg-white rounded-2xl shadow-sm border border-[#E5E9E7]">
+                  <div className="relative p-4 bg-white qr-scan-card rounded-2xl shadow-sm border border-[#E5E9E7]">
                     {/* Authentic QR SVG Graphic */}
                     <svg className="w-48 h-48" viewBox="0 0 100 100" fill="none">
                       {/* Outer Position Squares */}
