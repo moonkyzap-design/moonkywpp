@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F1F3F2;
+  --foreground: #252B28;
+  --card: #FFFFFF;
+  --card-foreground: #252B28;
+  --border: #E5E9E7;
+  --medium-gray: #AEB7B3;
+  --dark-gray: #252B28;
+  --green-accent: #45D483;
+  --green-accent-hover: #3bc275;
+}
+
+@theme {
+  --color-moonky-bg: #F1F3F2;
+  --color-moonky-surface: #FFFFFF;
+  --color-moonky-light: #F7F9F8;
+  --color-moonky-border: #E5E9E7;
+  --color-moonky-border-subtle: #ECEFEF;
+  --color-moonky-medium: #AEB7B3;
+  --color-moonky-dark: #252B28;
+  --color-moonky-green: #45D483;
+  --color-moonky-green-hover: #3bc275;
+  --color-moonky-green-light: #EAFBF2;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom sleek scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D9DFDC;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #AEB7B3;
+}
