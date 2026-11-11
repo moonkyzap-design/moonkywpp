@@ -91,7 +91,7 @@ const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
 
 export function MoonkyStoreProvider({ children }: { children: React.ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>('conv-hanaya-01');
+  const [activeConversationId, setActiveConversationId] = useState<string | null>('conv-uiux-01');
   const [messages, setMessages] = useState<Record<string, Message[]>>(initialMessages);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);

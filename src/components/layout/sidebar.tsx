@@ -11,9 +11,7 @@ import {
   Home,
   Search,
   Bookmark,
-  Bot,
-  Zap,
-  BarChart3,
+  Trash2,
   Share2,
   Settings,
   Sun,
@@ -43,6 +41,7 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Exact 6 items from image.png: Home, Search, Saves, Trash, Share, Settings
   const navItems: {
     id: NavigationTab;
     label: string;
@@ -52,28 +51,26 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
     { id: 'inbox', label: 'Home', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
     { id: 'overview', label: 'Search', icon: Search },
     { id: 'contacts', label: 'Saves', icon: Bookmark },
-    { id: 'ai-assistant', label: 'AI Bot', icon: Bot },
-    { id: 'automations', label: 'Auto', icon: Zap },
-    { id: 'analytics', label: 'Stats', icon: BarChart3 },
+    { id: 'automations', label: 'Trash', icon: Trash2 },
     { id: 'integrations', label: 'Share', icon: Share2 },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   return (
-    <aside className="w-[74px] md:w-[78px] bg-white border-r border-[#E5E9E7]/80 flex flex-col justify-between items-center py-5 shrink-0 select-none z-20">
-      {/* Top: Stylized Moonky Monogram Glyph */}
-      <div className="flex flex-col items-center gap-6">
+    <aside className="w-[74px] md:w-[78px] bg-white border-r border-[#E5E9E7]/80 flex flex-col justify-between items-center py-6 shrink-0 select-none z-20">
+      {/* Top: Stylized Moonky Monogram Glyph (matching image.png) */}
+      <div className="flex flex-col items-center gap-7">
         <button
           onClick={() => onSelectTab('inbox')}
           title="Moonky Intelligent Omnichannel"
-          className="relative w-11 h-11 rounded-2xl bg-gradient-to-b from-[#252B28] to-[#171B19] flex items-center justify-center text-white shadow-md hover:scale-105 transition-transform"
+          className="relative w-11 h-11 rounded-2xl bg-[#252B28] flex items-center justify-center text-white shadow-sm hover:scale-105 transition-transform"
         >
-          <span className="font-extrabold text-lg tracking-tighter text-white">M</span>
+          <span className="font-extrabold text-xl tracking-tighter text-white">M</span>
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#45D483] ring-2 ring-[#252B28]" />
         </button>
 
-        {/* Navigation Icon List (with small text underneath as in image.png) */}
-        <nav className="flex flex-col items-center gap-4">
+        {/* Navigation Icon List with small labels underneath (matching image.png) */}
+        <nav className="flex flex-col items-center gap-5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -83,10 +80,10 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
                 title={item.label}
-                className={`group relative flex flex-col items-center justify-center gap-1 w-13 py-1.5 rounded-2xl transition-all ${
+                className={`group relative flex flex-col items-center justify-center gap-1 w-13 py-1 transition-all ${
                   isActive
                     ? 'text-[#252B28]'
-                    : 'text-[#AEB7B3] hover:text-[#252B28] hover:bg-[#F1F3F2]/60'
+                    : 'text-[#AEB7B3] hover:text-[#252B28]'
                 }`}
               >
                 {/* Active Indicator Pill */}
@@ -98,7 +95,7 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
                   className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                     isActive
                       ? 'bg-[#252B28] text-white shadow-xs'
-                      : 'text-[#AEB7B3] group-hover:text-[#252B28]'
+                      : 'text-[#AEB7B3] group-hover:text-[#252B28] group-hover:bg-[#F1F3F2]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -125,7 +122,7 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
       </div>
 
       {/* Bottom: Day/Night Capsule Toggle & User Avatar (matching image.png) */}
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-5">
         {/* Day / Night Vertical Capsule Switch */}
         <div className="bg-[#F1F3F2] p-1 rounded-full flex flex-col items-center gap-1 shadow-inner">
           <button
@@ -137,7 +134,7 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
                 : 'text-[#AEB7B3] hover:text-[#252B28]'
             }`}
           >
-            <Sun className="w-3.5 h-3.5" />
+            <Sun className="w-3.5 h-3.5 text-[#45D483]" />
           </button>
           <button
             onClick={() => setIsDarkMode(true)}
