@@ -1,7 +1,7 @@
 'use client';
 
 // ===================================================================
-// MOONKY SLIM ICON RAIL NAVIGATION
+// MOONKY SLIM ICON RAIL NAVIGATION (100% PORTUGUÊS BRASIL)
 // Matching image.png design reference pixel-for-pixel
 // Palette: #FFFFFF, #F1F3F2, #AEB7B3, #252B28, #45D483
 // ===================================================================
@@ -42,35 +42,35 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Exact 6 items from image.png: Home, Search, Saves, Trash, Share, Settings
+  // 6 itens exatos da imagem de referência traduzidos para Português Brasil
   const navItems: {
     id: NavigationTab;
     label: string;
     icon: React.ElementType;
     badge?: number;
   }[] = [
-    { id: 'inbox', label: 'Home', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
-    { id: 'overview', label: 'Search', icon: Search },
-    { id: 'contacts', label: 'Saves', icon: Bookmark },
-    { id: 'automations', label: 'Trash', icon: Trash2 },
-    { id: 'integrations', label: 'Share', icon: Share2 },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'inbox', label: 'Início', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
+    { id: 'overview', label: 'Buscar', icon: Search },
+    { id: 'contacts', label: 'Salvos', icon: Bookmark },
+    { id: 'automations', label: 'Lixeira', icon: Trash2 },
+    { id: 'integrations', label: 'Canais', icon: Share2 },
+    { id: 'settings', label: 'Ajustes', icon: Settings }
   ];
 
   return (
     <aside className="w-[74px] md:w-[78px] bg-white border-r border-[#E5E9E7]/80 flex flex-col justify-between items-center py-6 shrink-0 select-none z-20">
-      {/* Top: Stylized Moonky Monogram Glyph (matching image.png) */}
+      {/* Topo: Monograma Moonky */}
       <div className="flex flex-col items-center gap-7">
         <button
           onClick={() => onSelectTab('inbox')}
-          title="Moonky Intelligent Omnichannel"
+          title="Moonky Atendimento Omnichannel"
           className="relative w-11 h-11 rounded-2xl bg-[#252B28] flex items-center justify-center text-white shadow-sm hover:scale-105 transition-transform"
         >
           <span className="font-extrabold text-xl tracking-tighter text-white">M</span>
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#45D483] ring-2 ring-[#252B28]" />
         </button>
 
-        {/* Navigation Icon List with small labels underneath (matching image.png) */}
+        {/* Lista de Ícones de Navegação com labels miniaturas */}
         <nav className="flex flex-col items-center gap-5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -87,7 +87,7 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
                     : 'text-[#AEB7B3] hover:text-[#252B28]'
                 }`}
               >
-                {/* Active Indicator Pill */}
+                {/* Indicador Ativo */}
                 {isActive && (
                   <span className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#45D483] rounded-r-full" />
                 )}
@@ -110,7 +110,7 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
                   {item.label}
                 </span>
 
-                {/* Badge if unread */}
+                {/* Badge de não lidas */}
                 {item.badge !== undefined && (
                   <span className="absolute top-0 right-1 w-4 h-4 bg-[#45D483] text-[#252B28] text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-xs">
                     {item.badge}
@@ -122,13 +122,13 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
         </nav>
       </div>
 
-      {/* Bottom: Day/Night Capsule Toggle & User Avatar (matching image.png) */}
+      {/* Base: Toggle Dia/Noite & Avatar do Usuário */}
       <div className="flex flex-col items-center gap-5">
-        {/* Day / Night Vertical Capsule Switch */}
+        {/* Switch Vertical Dia / Noite */}
         <div className="bg-[#F1F3F2] p-1 rounded-full flex flex-col items-center gap-1 shadow-inner">
           <button
             onClick={() => setIsDarkMode(false)}
-            title="Light mode"
+            title="Modo Claro"
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               !isDarkMode
                 ? 'bg-white text-[#252B28] shadow-xs'
@@ -139,7 +139,7 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
           </button>
           <button
             onClick={() => setIsDarkMode(true)}
-            title="Dark mode"
+            title="Modo Escuro"
             className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
               isDarkMode
                 ? 'bg-[#252B28] text-white shadow-xs'
@@ -150,7 +150,7 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
           </button>
         </div>
 
-        {/* User Profile Avatar with Online Ring — Opens WhatsApp QR Code & Instagram Connection */}
+        {/* Avatar com Anel Online — Abre Conexão WhatsApp QR Code / Instagram Oficial */}
         <button
           onClick={onOpenConnectModal || (() => onSelectTab('settings'))}
           title="Conectar WhatsApp QR Code / Instagram Oficial (WAME)"

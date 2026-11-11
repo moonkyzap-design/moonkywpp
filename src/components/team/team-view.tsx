@@ -1,8 +1,9 @@
 'use client';
 
 // ===================================================================
-// MOONKY TEAM & RBAC MANAGEMENT
-// Owner, Admin, Supervisor, Agent roles, invitations, permissions matrix
+// MOONKY GESTÃO DE EQUIPE & MATRIZ RBAC
+// Papéis de Proprietário, Admin, Supervisor, Agente, convites e permissões
+// 100% em Português Brasil
 // ===================================================================
 
 import React, { useState } from 'react';
@@ -27,7 +28,7 @@ export function TeamView() {
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
-    alert(`Invitation dispatched to ${inviteEmail} with role: ${inviteRole}`);
+    alert(`Convite enviado para ${inviteEmail} com o perfil: ${inviteRole}`);
     setInviteEmail('');
     setShowInviteModal(false);
   };
@@ -39,24 +40,31 @@ export function TeamView() {
     agent: 'bg-[#EAFBF2] text-[#1E7E49] border-emerald-200'
   };
 
+  const roleLabels: Record<UserRole, string> = {
+    owner: 'Proprietário',
+    admin: 'Administrador',
+    supervisor: 'Supervisor',
+    agent: 'Agente de Suporte'
+  };
+
   const permissionsMatrix = [
-    { permission: 'View and respond to Inbox conversations', owner: true, admin: true, supervisor: true, agent: true },
-    { permission: 'Assign & transfer conversations to team members', owner: true, admin: true, supervisor: true, agent: true },
-    { permission: 'Add internal notes & CRM customer tags', owner: true, admin: true, supervisor: true, agent: true },
-    { permission: 'Manage AI Knowledge Base & prompt instructions', owner: true, admin: true, supervisor: true, agent: false },
-    { permission: 'Create & activate automated workflow rules', owner: true, admin: true, supervisor: true, agent: false },
-    { permission: 'Configure WAME WhatsApp & Instagram instance keys', owner: true, admin: true, supervisor: false, agent: false },
-    { permission: 'Manage billing, subscriptions & invite team users', owner: true, admin: true, supervisor: false, agent: false }
+    { permission: 'Visualizar e responder conversas no Inbox unificado', owner: true, admin: true, supervisor: true, agent: true },
+    { permission: 'Atribuir e transferir conversas entre membros da equipe', owner: true, admin: true, supervisor: true, agent: true },
+    { permission: 'Adicionar notas internas & tags do CRM aos contatos', owner: true, admin: true, supervisor: true, agent: true },
+    { permission: 'Gerenciar Base de Conhecimento e instruções de prompt da IA', owner: true, admin: true, supervisor: true, agent: false },
+    { permission: 'Criar e ativar regras de fluxos de automação', owner: true, admin: true, supervisor: true, agent: false },
+    { permission: 'Configurar chaves de instâncias WAME de WhatsApp e Instagram', owner: true, admin: true, supervisor: false, agent: false },
+    { permission: 'Gerenciar cobrança, planos e convidar membros para a equipe', owner: true, admin: true, supervisor: false, agent: false }
   ];
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F1F3F2] p-8 space-y-6 select-none">
-      {/* Top Header */}
+      {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">Team & Permissions</h1>
+          <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">Equipe & Permissões</h1>
           <p className="text-xs text-[#6C7671] mt-1">
-            Manage agents, role-based access control (RBAC), and team assignments.
+            Gerencie operadores, controle de acesso baseado em funções (RBAC) e distribuição de tickets.
           </p>
         </div>
 
@@ -65,33 +73,33 @@ export function TeamView() {
           className="bg-[#252B28] hover:bg-[#1a1f1d] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2 self-start"
         >
           <UserPlus className="w-3.5 h-3.5 text-[#45D483]" />
-          <span>Invite Team Member</span>
+          <span>Convidar Membro da Equipe</span>
         </button>
       </div>
 
-      {/* Team Members Table */}
+      {/* Tabela de Membros */}
       <div className="bg-white rounded-2xl border border-[#E5E9E7] shadow-xs overflow-hidden">
         <div className="p-5 border-b border-[#F1F3F2] flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-[#252B28]">Active Team Members</h2>
+            <h2 className="text-sm font-bold text-[#252B28]">Membros Ativos da Equipe</h2>
             <p className="text-xs text-[#AEB7B3]">
-              {teamMembers.length} seats utilized in current Growth Plan
+              {teamMembers.length} licenças utilizadas no Plano Growth
             </p>
           </div>
           <span className="text-[11px] font-bold text-[#1E7E49] bg-[#EAFBF2] px-2.5 py-1 rounded-full">
-            4 / 5 Seats Used
+            4 / 5 Licenças Ocupadas
           </span>
         </div>
 
         <table className="w-full text-left text-xs">
           <thead className="bg-[#F7F9F8] border-b border-[#E5E9E7] text-[#AEB7B3] uppercase text-[10px] font-bold tracking-wider">
             <tr>
-              <th className="py-3 px-6">Member</th>
-              <th className="py-3 px-6">Role</th>
-              <th className="py-3 px-6">Active Chats</th>
+              <th className="py-3 px-6">Membro</th>
+              <th className="py-3 px-6">Função</th>
+              <th className="py-3 px-6">Conversas Ativas</th>
               <th className="py-3 px-6">Status</th>
-              <th className="py-3 px-6">Last Active</th>
-              <th className="py-3 px-6 text-right">Actions</th>
+              <th className="py-3 px-6">Última Atividade</th>
+              <th className="py-3 px-6 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F1F3F2]">
@@ -118,12 +126,12 @@ export function TeamView() {
                       roleBadgeStyles[member.role]
                     }`}
                   >
-                    {member.role}
+                    {roleLabels[member.role] || member.role}
                   </span>
                 </td>
 
                 <td className="py-3.5 px-6 font-bold text-[#252B28]">
-                  {member.assignedChatsCount} assigned
+                  {member.assignedChatsCount} atribuídas
                 </td>
 
                 <td className="py-3.5 px-6">
@@ -137,7 +145,7 @@ export function TeamView() {
 
                 <td className="py-3.5 px-6 text-right">
                   <button className="text-xs font-semibold text-[#252B28] hover:underline">
-                    Edit Role
+                    Editar Função
                   </button>
                 </td>
               </tr>
@@ -146,12 +154,12 @@ export function TeamView() {
         </table>
       </div>
 
-      {/* Role-Based Permissions Matrix */}
+      {/* Matriz RBAC */}
       <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
         <div>
-          <h2 className="text-sm font-bold text-[#252B28]">Role-Based Access Control (RBAC) Matrix</h2>
+          <h2 className="text-sm font-bold text-[#252B28]">Matriz de Controle de Acesso por Função (RBAC)</h2>
           <p className="text-xs text-[#AEB7B3] mt-0.5">
-            Strict permissions enforced server-side via Supabase Row-Level Security.
+            Permissões estritas validadas no servidor via Supabase Row-Level Security (RLS).
           </p>
         </div>
 
@@ -159,11 +167,11 @@ export function TeamView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#F7F9F8] border-b border-[#E5E9E7] text-[#AEB7B3] uppercase text-[10px] font-bold">
               <tr>
-                <th className="py-2.5 px-4">Permission Module</th>
-                <th className="py-2.5 px-4 text-center">Owner</th>
-                <th className="py-2.5 px-4 text-center">Admin</th>
+                <th className="py-2.5 px-4">Módulo de Permissão</th>
+                <th className="py-2.5 px-4 text-center">Proprietário</th>
+                <th className="py-2.5 px-4 text-center">Administrador</th>
                 <th className="py-2.5 px-4 text-center">Supervisor</th>
-                <th className="py-2.5 px-4 text-center">Agent</th>
+                <th className="py-2.5 px-4 text-center">Agente</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F1F3F2]">
@@ -205,17 +213,17 @@ export function TeamView() {
         </div>
       </div>
 
-      {/* Modal: Invite Team Member */}
+      {/* Modal: Convidar Membro */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7]">
-            <h3 className="text-base font-bold text-[#252B28]">Invite New Team Member</h3>
+            <h3 className="text-base font-bold text-[#252B28]">Convidar Novo Membro da Equipe</h3>
             <form onSubmit={handleInvite} className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Corporate Email</label>
+                <label className="font-bold text-[#252B28] block mb-1">E-mail Corporativo</label>
                 <input
                   type="email"
-                  placeholder="agent@company.com"
+                  placeholder="atendente@empresa.com.br"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
@@ -224,15 +232,15 @@ export function TeamView() {
               </div>
 
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Role Assignment</label>
+                <label className="font-bold text-[#252B28] block mb-1">Função Atribuída</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as UserRole)}
                   className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none"
                 >
-                  <option value="agent">Support Agent</option>
-                  <option value="supervisor">Team Supervisor</option>
-                  <option value="admin">Administrator</option>
+                  <option value="agent">Agente de Suporte</option>
+                  <option value="supervisor">Supervisor de Equipe</option>
+                  <option value="admin">Administrador</option>
                 </select>
               </div>
 
@@ -242,13 +250,13 @@ export function TeamView() {
                   onClick={() => setShowInviteModal(false)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-[#6C7671] hover:bg-[#F1F3F2]"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   className="bg-[#252B28] text-white hover:bg-[#1a1f1d] px-4 py-2 rounded-xl text-xs font-semibold shadow-xs"
                 >
-                  Send Invitation
+                  Enviar Convite
                 </button>
               </div>
             </form>

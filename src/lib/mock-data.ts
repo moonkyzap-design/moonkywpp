@@ -39,28 +39,28 @@ export const initialChannels: Channel[] = [
   {
     id: 'chan-wame-wa-01',
     organizationId: 'org-moonky-global-01',
-    name: 'WhatsApp Official Care',
+    name: 'WhatsApp Oficial',
     type: 'whatsapp',
     provider: 'wame',
     instanceKey: 'WAME_PROD_INSTANCE_8941',
     isOfficial: true,
     phoneNumber: '+55 11 98877-6655',
     status: 'connected',
-    webhookUrl: 'https://moonky.app/api/webhooks/wame',
-    lastSyncAt: 'Just now'
+    webhookUrl: 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame',
+    lastSyncAt: 'Agora'
   },
   {
     id: 'chan-wame-ig-01',
     organizationId: 'org-moonky-global-01',
-    name: 'Instagram Direct Support',
+    name: 'Instagram Direct Oficial',
     type: 'instagram',
     provider: 'wame',
     instanceKey: 'WAME_IG_INSTANCE_4421',
     isOfficial: true,
     instagramUsername: 'moonky.enterprise',
     status: 'connected',
-    webhookUrl: 'https://moonky.app/api/webhooks/wame',
-    lastSyncAt: '2 min ago'
+    webhookUrl: 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame',
+    lastSyncAt: 'há 2 min'
   }
 ];
 
@@ -73,7 +73,7 @@ export const initialTeamMembers: TeamMember[] = [
     role: 'admin',
     status: 'active',
     assignedChatsCount: 5,
-    lastActiveAt: 'Active now'
+    lastActiveAt: 'Ativo agora'
   },
   {
     id: 'user-mobin-02',
@@ -83,7 +83,7 @@ export const initialTeamMembers: TeamMember[] = [
     role: 'supervisor',
     status: 'active',
     assignedChatsCount: 3,
-    lastActiveAt: '5m ago'
+    lastActiveAt: 'há 5m'
   },
   {
     id: 'user-arshia-03',
@@ -93,7 +93,7 @@ export const initialTeamMembers: TeamMember[] = [
     role: 'agent',
     status: 'active',
     assignedChatsCount: 4,
-    lastActiveAt: '12m ago'
+    lastActiveAt: 'há 12m'
   },
   {
     id: 'user-mahdi-04',
@@ -103,7 +103,7 @@ export const initialTeamMembers: TeamMember[] = [
     role: 'agent',
     status: 'active',
     assignedChatsCount: 2,
-    lastActiveAt: 'Active now'
+    lastActiveAt: 'Ativo agora'
   }
 ];
 
@@ -404,13 +404,13 @@ export const initialAnalytics: AnalyticsSummary = {
   newLeadsCount: 420,
   resolutionRatePercentage: 99.2,
   volumeByDay: [
-    { day: 'Mon', whatsapp: 420, instagram: 180 },
-    { day: 'Tue', whatsapp: 510, instagram: 230 },
-    { day: 'Wed', whatsapp: 490, instagram: 210 },
-    { day: 'Thu', whatsapp: 560, instagram: 290 },
-    { day: 'Fri', whatsapp: 620, instagram: 340 },
-    { day: 'Sat', whatsapp: 380, instagram: 190 },
-    { day: 'Sun', whatsapp: 310, instagram: 150 }
+    { day: 'Seg', whatsapp: 420, instagram: 180 },
+    { day: 'Ter', whatsapp: 510, instagram: 230 },
+    { day: 'Qua', whatsapp: 490, instagram: 210 },
+    { day: 'Qui', whatsapp: 560, instagram: 290 },
+    { day: 'Sex', whatsapp: 620, instagram: 340 },
+    { day: 'Sáb', whatsapp: 380, instagram: 190 },
+    { day: 'Dom', whatsapp: 310, instagram: 150 }
   ],
   channelDistribution: [
     { channel: 'WhatsApp', percentage: 72, count: 2507 },

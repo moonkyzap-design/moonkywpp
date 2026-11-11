@@ -1,8 +1,9 @@
 'use client';
 
 // ===================================================================
-// MOONKY AI ASSISTANT CONFIGURATION & KNOWLEDGE STUDIO
-// Strict knowledge grounding, human handoff trigger rules & token telemetry
+// MOONKY ESTÚDIO DO ASSISTENTE IA & BASE DE CONHECIMENTO
+// Grounding de conhecimento estrito, regras de transbordo humano e telemetria
+// 100% em Português Brasil
 // ===================================================================
 
 import React, { useState } from 'react';
@@ -34,11 +35,11 @@ export function AIAssistantView() {
 
   const [activeTab, setActiveTab] = useState<'settings' | 'knowledge' | 'handoff' | 'playground'>('settings');
   const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('Logistics');
+  const [newCategory, setNewCategory] = useState('Logística');
   const [newContent, setNewContent] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Playground state
+  // Estado do simulador / playground
   const [playgroundInput, setPlaygroundInput] = useState('');
   const [playgroundLoading, setPlaygroundLoading] = useState(false);
   const [playgroundResult, setPlaygroundResult] = useState<{
@@ -72,7 +73,7 @@ export function AIAssistantView() {
 
     const result = await moonkyAI.generateResponse({
       conversationId: 'playground-test',
-      contactName: 'Playground User',
+      contactName: 'Usuário do Teste',
       lastCustomerMessage: playgroundInput,
       conversationHistory: [],
       knowledgeBase,
@@ -94,27 +95,27 @@ export function AIAssistantView() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F1F3F2] p-8 space-y-6 select-none">
-      {/* Top Header */}
+      {/* Cabeçalho Superior */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">AI Assistant Studio</h1>
+            <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">Estúdio do Assistente IA</h1>
             <span className="bg-[#EAFBF2] text-[#1E7E49] text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-              <Sparkles className="w-3 h-3 text-[#45D483]" /> Zero-Hallucination Grounding
+              <Sparkles className="w-3 h-3 text-[#45D483]" /> Zero Alucinação Ativo
             </span>
           </div>
           <p className="text-xs text-[#6C7671] mt-1">
-            Configure enterprise personality, verified business knowledge, and automatic human handoff.
+            Configure a personalidade corporativa, base de conhecimento verificada e regras automáticas de transbordo humano.
           </p>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Alternador de Abas */}
         <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E5E9E7] shadow-xs text-xs font-semibold">
           {[
-            { id: 'settings', label: 'Personality & Rules' },
-            { id: 'knowledge', label: `Knowledge Base (${knowledgeBase.length})` },
-            { id: 'handoff', label: 'Human Handoff' },
-            { id: 'playground', label: 'Live Playground' }
+            { id: 'settings', label: 'Personalidade & Regras' },
+            { id: 'knowledge', label: `Base de Conhecimento (${knowledgeBase.length})` },
+            { id: 'handoff', label: 'Transbordo Humano' },
+            { id: 'playground', label: 'Simulador ao Vivo' }
           ].map((t) => (
             <button
               key={t.id}
@@ -131,15 +132,15 @@ export function AIAssistantView() {
         </div>
       </div>
 
-      {/* TAB 1: SETTINGS & PERSONALITY */}
+      {/* ABA 1: CONFIGURAÇÕES & PERSONALIDADE */}
       {activeTab === 'settings' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-5">
-            <h2 className="text-sm font-bold text-[#252B28]">Assistant Identity & Scope</h2>
+            <h2 className="text-sm font-bold text-[#252B28]">Identidade & Escopo do Assistente</h2>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Assistant Display Name</label>
+                <label className="font-bold text-[#252B28] block mb-1">Nome de Exibição do Assistente</label>
                 <input
                   type="text"
                   value={aiSettings.name}
@@ -149,7 +150,7 @@ export function AIAssistantView() {
               </div>
 
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Personality & Tone</label>
+                <label className="font-bold text-[#252B28] block mb-1">Personalidade & Tom de Voz</label>
                 <textarea
                   rows={2}
                   value={aiSettings.personality}
@@ -160,7 +161,7 @@ export function AIAssistantView() {
 
               <div>
                 <label className="font-bold text-[#252B28] block mb-1">
-                  Custom System Instructions (Strict Prompt Guardrails)
+                  Instruções Customizadas do Sistema (Diretrizes Estritas de Prompt)
                 </label>
                 <textarea
                   rows={4}
@@ -170,9 +171,9 @@ export function AIAssistantView() {
                 />
               </div>
 
-              {/* Per-Channel Activation */}
+              {/* Ativação por Canal */}
               <div className="pt-3 border-t border-[#F1F3F2] space-y-3">
-                <p className="font-bold text-[#252B28]">Channel Activation</p>
+                <p className="font-bold text-[#252B28]">Ativação por Canal de Atendimento</p>
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -181,7 +182,7 @@ export function AIAssistantView() {
                       onChange={(e) => updateAISettings({ whatsappEnabled: e.target.checked })}
                       className="w-4 h-4 accent-[#45D483] rounded"
                     />
-                    <span className="font-medium text-[#252B28]">Enable on WhatsApp</span>
+                    <span className="font-medium text-[#252B28]">Ativar no WhatsApp</span>
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -191,30 +192,30 @@ export function AIAssistantView() {
                       onChange={(e) => updateAISettings({ instagramEnabled: e.target.checked })}
                       className="w-4 h-4 accent-[#45D483] rounded"
                     />
-                    <span className="font-medium text-[#252B28]">Enable on Instagram Direct</span>
+                    <span className="font-medium text-[#252B28]">Ativar no Instagram Direct</span>
                   </label>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Model & Operational Limits */}
+          {/* Motor & Limites Operacionais */}
           <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-5">
-            <h2 className="text-sm font-bold text-[#252B28]">Operational Engine</h2>
+            <h2 className="text-sm font-bold text-[#252B28]">Motor de Inteligência</h2>
 
             <div className="space-y-4 text-xs">
               <div>
                 <label className="text-[10px] font-bold uppercase text-[#AEB7B3] block mb-1">
-                  Server Provider
+                  Provedor no Servidor
                 </label>
                 <div className="p-3 bg-[#F7F9F8] rounded-xl border border-[#E5E9E7] font-semibold text-[#252B28]">
-                  {aiSettings.provider.toUpperCase()} (Configurable via env)
+                  {aiSettings.provider.toUpperCase()} (Configurável via .env)
                 </div>
               </div>
 
               <div>
                 <label className="text-[10px] font-bold uppercase text-[#AEB7B3] block mb-1">
-                  Active Model
+                  Modelo Ativo
                 </label>
                 <div className="p-3 bg-[#F7F9F8] rounded-xl border border-[#E5E9E7] font-semibold text-[#252B28]">
                   {aiSettings.model}
@@ -224,10 +225,10 @@ export function AIAssistantView() {
               <div className="p-4 bg-[#EAFBF2] border border-emerald-200 rounded-xl space-y-2">
                 <div className="flex items-center gap-2 font-bold text-xs text-[#1E7E49]">
                   <CheckCircle2 className="w-4 h-4 text-[#45D483]" />
-                  <span>Strict Moonky AI Rules Active</span>
+                  <span>Regras Estritas Moonky AI Ativas</span>
                 </div>
                 <p className="text-[11px] text-[#1E7E49]/80 leading-relaxed">
-                  The model never fabricates information. If an inquiry is not covered by verified knowledge articles, it triggers instant human handoff.
+                  O modelo nunca inventa preços, prazos ou regras da empresa. Se a pergunta não estiver presente na base verificada, aciona imediatamente o transbordo para um atendente humano.
                 </p>
               </div>
             </div>
@@ -235,14 +236,14 @@ export function AIAssistantView() {
         </div>
       )}
 
-      {/* TAB 2: KNOWLEDGE BASE ARTICLES */}
+      {/* ABA 2: BASE DE CONHECIMENTO */}
       {activeTab === 'knowledge' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-[#252B28]">Verified Company Knowledge Base</h2>
+              <h2 className="text-sm font-bold text-[#252B28]">Base de Conhecimento Verificada da Empresa</h2>
               <p className="text-xs text-[#AEB7B3]">
-                AI only uses information contained in these verified company articles.
+                A IA responde exclusivamente com base nas informações contidas nestes artigos verificados.
               </p>
             </div>
             <button
@@ -250,7 +251,7 @@ export function AIAssistantView() {
               className="bg-[#252B28] hover:bg-[#1a1f1d] text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
             >
               <Plus className="w-3.5 h-3.5 text-[#45D483]" />
-              <span>Add Knowledge Article</span>
+              <span>Adicionar Artigo de Conhecimento</span>
             </button>
           </div>
 
@@ -275,7 +276,7 @@ export function AIAssistantView() {
                       onChange={(e) => updateKnowledgeItem(item.id, { isActive: e.target.checked })}
                       className="w-3.5 h-3.5 accent-[#45D483]"
                     />
-                    <span className="text-[11px] font-semibold">Active</span>
+                    <span className="text-[11px] font-semibold">Ativo</span>
                   </label>
                 </div>
 
@@ -284,9 +285,9 @@ export function AIAssistantView() {
                 </p>
 
                 <div className="flex items-center justify-between text-[11px] text-[#AEB7B3] pt-1">
-                  <span>Updated: {item.updatedAt}</span>
+                  <span>Atualizado: {item.updatedAt}</span>
                   <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-[#45D483]" /> Verified Grounding
+                    <CheckCircle2 className="w-3 h-3 text-[#45D483]" /> Grounding Verificado
                   </span>
                 </div>
               </div>
@@ -295,13 +296,13 @@ export function AIAssistantView() {
         </div>
       )}
 
-      {/* TAB 3: HUMAN HANDOFF PROTOCOL */}
+      {/* ABA 3: PROTOCOLO DE TRANSBORDO HUMANO */}
       {activeTab === 'handoff' && (
         <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-[#252B28]">Human Agent Takeover & Handoff Rules</h2>
+            <h2 className="text-sm font-bold text-[#252B28]">Regras de Transbordo & Assunção por Agentes Humanos</h2>
             <p className="text-xs text-[#AEB7B3] mt-0.5">
-              Defines conditions where the AI stops answering and immediately transfers the chat to human agents.
+              Define os critérios nos quais a IA pausa as respostas automáticas e transfere o atendimento aos operadores humanos.
             </p>
           </div>
 
@@ -309,10 +310,10 @@ export function AIAssistantView() {
             <div className="p-4 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl space-y-3">
               <h3 className="font-bold text-[#252B28] flex items-center gap-1.5">
                 <ShieldAlert className="w-4 h-4 text-amber-500" />
-                <span>Automatic Escalation Keywords</span>
+                <span>Palavras-Chave de Escalação Automática</span>
               </h3>
               <p className="text-[#6C7671] text-[11px]">
-                When any of these keywords are sent by the customer, AI pauses instantly and transfers to an agent:
+                Quando qualquer um destes termos for enviado pelo cliente, a IA é pausada instantaneamente e a conversa vai para a fila humana:
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {aiSettings.handoffKeywords.map((kw, i) => (
@@ -329,26 +330,26 @@ export function AIAssistantView() {
             <div className="p-4 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl space-y-3">
               <h3 className="font-bold text-[#252B28] flex items-center gap-1.5">
                 <Bot className="w-4 h-4 text-[#45D483]" />
-                <span>Uncertainty & Fallback Rule</span>
+                <span>Regra de Incerteza e Fallback</span>
               </h3>
               <p className="text-[#6C7671] text-[11px] leading-relaxed">
-                If the question cannot be answered with 100% certainty from the verified company knowledge base, the AI is forbidden from guessing and is programmed to trigger the handoff protocol immediately.
+                Se a dúvida não puder ser respondida com 100% de precisão baseada na base de conhecimento corporativa, a IA é terminantemente proibida de inventar ou supor, acionando o transbordo na mesma hora.
               </p>
               <div className="p-2.5 bg-white border border-[#E5E9E7] rounded-lg text-[11px] text-[#252B28] font-mono">
-                [HANDOFF_REQUESTED] → Pause AI → Notify assigned agent
+                [TRANSBORDO_SOLICITADO] → Pausar IA → Notificar operador responsável
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 4: LIVE PLAYGROUND */}
+      {/* ABA 4: SIMULADOR AO VIVO */}
       {activeTab === 'playground' && (
         <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-[#252B28]">Interactive AI Grounding Simulator</h2>
+            <h2 className="text-sm font-bold text-[#252B28]">Simulador Interativo de Grounding da IA</h2>
             <p className="text-xs text-[#AEB7B3] mt-0.5">
-              Test queries against your company knowledge base and observe real-time handoff behavior.
+              Envie perguntas de teste contra a base de conhecimento da sua empresa e observe o comportamento em tempo real.
             </p>
           </div>
 
@@ -356,7 +357,7 @@ export function AIAssistantView() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ask something (e.g., 'What is your shipping policy for missing parcels?' or 'Quero falar com um humano')"
+                placeholder="Pergunte algo (ex: 'Qual o horário de suporte?' ou 'Quero falar com um humano')"
                 value={playgroundInput}
                 onChange={(e) => setPlaygroundInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleTestPlayground()}
@@ -368,20 +369,20 @@ export function AIAssistantView() {
                 className="bg-[#252B28] hover:bg-[#1a1f1d] text-white text-xs font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-40"
               >
                 <Play className="w-3.5 h-3.5 text-[#45D483]" />
-                <span>{playgroundLoading ? 'Evaluating...' : 'Simulate'}</span>
+                <span>{playgroundLoading ? 'Avaliando...' : 'Simular Resposta'}</span>
               </button>
             </div>
 
-            {/* Quick Prompts */}
+            {/* Prompts Rápidos */}
             <div className="flex items-center gap-2 text-xs text-[#6C7671]">
-              <span className="text-[11px] font-bold">Quick test prompts:</span>
+              <span className="text-[11px] font-bold">Prompts de teste rápido:</span>
               <button
                 onClick={() => {
-                  setPlaygroundInput('What is your delivery policy for missing electronic parcels?');
+                  setPlaygroundInput('Qual o horário de funcionamento do atendimento?');
                 }}
                 className="text-[11px] bg-[#F1F3F2] px-2 py-0.5 rounded hover:bg-[#E5E9E7]"
               >
-                Delivery Policy
+                Horário de Atendimento
               </button>
               <button
                 onClick={() => {
@@ -389,15 +390,15 @@ export function AIAssistantView() {
                 }}
                 className="text-[11px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded hover:bg-amber-100"
               >
-                Handoff Trigger
+                Disparo de Transbordo
               </button>
               <button
                 onClick={() => {
-                  setPlaygroundInput('Can you fly a rocket to Mars tomorrow?');
+                  setPlaygroundInput('Vocês lançam foguetes espaciais para Marte amanhã?');
                 }}
                 className="text-[11px] bg-[#F1F3F2] px-2 py-0.5 rounded hover:bg-[#E5E9E7]"
               >
-                Unknown Question (Escalation)
+                Pergunta Fora do Escopo (Escalação)
               </button>
             </div>
           </div>
@@ -406,7 +407,7 @@ export function AIAssistantView() {
             <div className="p-5 bg-[#F7F9F8] border border-[#E5E9E7] rounded-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-[#E5E9E7] pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-xs text-[#252B28]">Simulated AI Response</span>
+                  <span className="font-bold text-xs text-[#252B28]">Resposta Simulada da IA</span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       playgroundResult.isHandoff
@@ -414,14 +415,14 @@ export function AIAssistantView() {
                         : 'bg-[#EAFBF2] text-[#1E7E49]'
                     }`}
                   >
-                    {playgroundResult.isHandoff ? 'Handoff Triggered' : 'Grounded Reply'}
+                    {playgroundResult.isHandoff ? 'Transbordo Humano Acionado' : 'Resposta Apoiada na Base'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-4 text-[11px] text-[#AEB7B3]">
-                  <span>Latency: {playgroundResult.latency}ms</span>
+                  <span>Latência: {playgroundResult.latency}ms</span>
                   <span>Tokens: {playgroundResult.tokens}</span>
-                  <span>Confidence: {(playgroundResult.confidence * 100).toFixed(0)}%</span>
+                  <span>Confiança: {(playgroundResult.confidence * 100).toFixed(0)}%</span>
                 </div>
               </div>
 
@@ -431,7 +432,7 @@ export function AIAssistantView() {
 
               {playgroundResult.reasoning && (
                 <div className="text-[11px] text-[#6C7671] bg-white/70 p-2.5 rounded-lg border border-[#E5E9E7] italic">
-                  Grounding Trace: {playgroundResult.reasoning}
+                  Rastreamento de Grounding: {playgroundResult.reasoning}
                 </div>
               )}
             </div>
@@ -439,17 +440,17 @@ export function AIAssistantView() {
         </div>
       )}
 
-      {/* Modal: Add Knowledge Item */}
+      {/* Modal: Adicionar Artigo de Conhecimento */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7]">
-            <h3 className="text-base font-bold text-[#252B28]">Add Verified Knowledge Article</h3>
+            <h3 className="text-base font-bold text-[#252B28]">Adicionar Artigo de Conhecimento Verificado</h3>
             <form onSubmit={handleAddArticle} className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Article Title</label>
+                <label className="font-bold text-[#252B28] block mb-1">Título do Artigo</label>
                 <input
                   type="text"
-                  placeholder="e.g. Return & Refund Policy"
+                  placeholder="Ex: Política de Trocas e Devoluções"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
@@ -458,26 +459,26 @@ export function AIAssistantView() {
               </div>
 
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Category</label>
+                <label className="font-bold text-[#252B28] block mb-1">Categoria</label>
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none"
                 >
-                  <option value="Logistics">Logistics & Shipping</option>
-                  <option value="Billing">Billing & Insurance</option>
-                  <option value="Pricing">Plans & Pricing</option>
-                  <option value="General">General FAQ</option>
+                  <option value="Logística">Logística & Envios</option>
+                  <option value="Financeiro">Faturamento & Pagamentos</option>
+                  <option value="Planos">Planos & Preços</option>
+                  <option value="Suporte">Dúvidas Frequentes (FAQ)</option>
                 </select>
               </div>
 
               <div>
                 <label className="font-bold text-[#252B28] block mb-1">
-                  Article Content (Exact company truth)
+                  Conteúdo do Artigo (Fatos oficiais da empresa)
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Detail the exact policy, steps, or facts for the AI to follow..."
+                  placeholder="Descreva a política exata, instruções ou regras oficiais para a IA seguir à risca..."
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl p-3 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
@@ -491,13 +492,13 @@ export function AIAssistantView() {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-[#6C7671] hover:bg-[#F1F3F2]"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   className="bg-[#252B28] text-white hover:bg-[#1a1f1d] px-4 py-2 rounded-xl text-xs font-semibold shadow-xs"
                 >
-                  Save Article
+                  Salvar Artigo
                 </button>
               </div>
             </form>

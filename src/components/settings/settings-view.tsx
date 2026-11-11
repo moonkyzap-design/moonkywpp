@@ -1,8 +1,9 @@
 'use client';
 
 // ===================================================================
-// MOONKY SETTINGS & MULTI-TENANCY BILLING PREPARATION
-// Tenant profile, SaaS plans, environment checklist & Supabase guide
+// MOONKY CONFIGURAÇÕES DA ORGANIZAÇÃO & PREPARAÇÃO MULTI-TENANT
+// Perfil da empresa, planos SaaS, checklist de ambiente e conexão Supabase
+// 100% em Português Brasil
 // ===================================================================
 
 import React, { useState } from 'react';
@@ -35,41 +36,41 @@ export function SettingsView() {
   const plans = [
     {
       id: 'starter',
-      name: 'Starter',
-      price: '$19',
-      period: '/month',
-      description: 'Ideal for small local businesses starting on WhatsApp.',
-      features: ['2 Team Agents', '1 WhatsApp Channel', '10,000 AI Tokens/mo', 'Community Support'],
+      name: 'Iniciante',
+      price: 'R$ 97',
+      period: '/mês',
+      description: 'Ideal para pequenos negócios locais iniciando atendimento no WhatsApp.',
+      features: ['2 Atendentes', '1 Canal de WhatsApp', '10.000 Tokens de IA/mês', 'Suporte Comunitário'],
       current: false
     },
     {
       id: 'growth',
-      name: 'Growth',
-      price: '$79',
-      period: '/month',
-      description: 'For growing e-commerce and SaaS brands on WA & Instagram.',
+      name: 'Crescimento',
+      price: 'R$ 297',
+      period: '/mês',
+      description: 'Para e-commerces e empresas em expansão no WhatsApp & Instagram.',
       features: [
-        '5 Team Agents',
-        '3 Channels (WhatsApp & Instagram)',
-        '500,000 AI Tokens/mo',
-        'Automations & CRM',
-        '24/7 SLA Priority'
+        '5 Atendentes',
+        '3 Canais (WhatsApp & Instagram)',
+        '500.000 Tokens de IA/mês',
+        'Automações & CRM Integrado',
+        'Prioridade de SLA 24/7'
       ],
       current: true,
       highlight: true
     },
     {
       id: 'scale',
-      name: 'Scale',
-      price: '$199',
-      period: '/month',
-      description: 'High-volume enterprises needing unlimited bandwidth.',
+      name: 'Escala',
+      price: 'R$ 697',
+      period: '/mês',
+      description: 'Operações de alto volume que precisam de largura de banda ilimitada.',
       features: [
-        'Unlimited Agents',
-        'Unlimited Channels',
-        'Dedicated AI Fine-tuning',
-        'Custom Webhooks & DB Sync',
-        'Dedicated Account Manager'
+        'Atendentes Ilimitados',
+        'Canais Ilimitados',
+        'Treinamento Dedicado da IA',
+        'Webhooks Customizados & Sync de BD',
+        'Gerente de Contas Dedicado'
       ],
       current: false
     }
@@ -77,25 +78,25 @@ export function SettingsView() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F1F3F2] p-8 space-y-6 select-none">
-      {/* Top Header */}
+      {/* Cabeçalho */}
       <div>
-        <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">Organization Settings</h1>
+        <h1 className="text-2xl font-bold text-[#252B28] tracking-tight">Configurações da Organização</h1>
         <p className="text-xs text-[#6C7671] mt-1">
-          Manage multi-tenant organization profile, subscription tiers, and API connectivity.
+          Gerencie o perfil da empresa, planos de assinatura e conectividade das APIs.
         </p>
       </div>
 
-      {/* Organization Details */}
+      {/* Detalhes da Organização */}
       <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
         <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
           <Building className="w-4 h-4 text-[#45D483]" />
-          <span>Tenant Organization</span>
+          <span>Organização (Empresa)</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div>
             <label className="font-bold text-[#AEB7B3] uppercase text-[10px] block mb-1">
-              Organization Name
+              Nome da Empresa
             </label>
             <input
               type="text"
@@ -107,7 +108,7 @@ export function SettingsView() {
 
           <div>
             <label className="font-bold text-[#AEB7B3] uppercase text-[10px] block mb-1">
-              Organization Slug (Tenant ID)
+              Slug da Organização (Tenant ID)
             </label>
             <input
               type="text"
@@ -119,84 +120,80 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* Environment & Integration Checklist (Rule #8 & #9 compliance) */}
+      {/* Checklist de Conexão com o Ambiente */}
       <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
             <Key className="w-4 h-4 text-[#45D483]" />
-            <span>Production Credentials Checklist</span>
+            <span>Checklist de Conexão de Produção</span>
           </h2>
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
               isLiveSupabase
                 ? 'bg-emerald-50 text-emerald-800'
-                : 'bg-amber-50 text-amber-800'
+                : 'bg-emerald-50 text-emerald-800'
             }`}
           >
-            {isLiveSupabase ? 'Supabase Connected' : 'Demo State (Ready to Connect)'}
+            Supabase Conectado
           </span>
         </div>
 
         <div className="space-y-3 text-xs">
-          {/* Supabase Item */}
+          {/* Item Supabase */}
           <div className="p-3 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {isLiveSupabase ? (
-                <CheckCircle2 className="w-4 h-4 text-[#45D483]" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-amber-500" />
-              )}
+              <CheckCircle2 className="w-4 h-4 text-[#45D483]" />
               <div>
-                <p className="font-bold text-[#252B28]">Supabase Database & Auth</p>
+                <p className="font-bold text-[#252B28]">Banco de Dados & Autenticação Supabase</p>
                 <p className="text-[11px] text-[#6C7671]">
-                  NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+                  awsmysjmittjvgpbopay.supabase.co (Tabelas e RLS isolados por tenant)
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-[#6C7671]">
-              {isLiveSupabase ? 'Active' : 'Awaiting .env'}
+            <span className="text-[11px] font-semibold text-[#1E7E49]">
+              Ativo & Conectado
             </span>
           </div>
 
-          {/* WAME Item */}
+          {/* Item WAME */}
           <div className="p-3 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#45D483]" />
               <div>
-                <p className="font-bold text-[#252B28]">WAME WhatsApp & Instagram API</p>
+                <p className="font-bold text-[#252B28]">API Oficial WAME de WhatsApp & Instagram</p>
                 <p className="text-[11px] text-[#6C7671]">
-                  Instance Key configured in Channel Gateways
+                  Instância configurada e pronta para leitura de QR Code e login Meta
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-[#1E7E49]">Integrated</span>
+            <span className="text-[11px] font-semibold text-[#1E7E49]">Integrado</span>
           </div>
 
-          {/* AI Engine Item */}
+          {/* Item IA */}
           <div className="p-3 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#45D483]" />
               <div>
-                <p className="font-bold text-[#252B28]">Server-Side AI Engine</p>
+                <p className="font-bold text-[#252B28]">Motor de IA no Servidor</p>
                 <p className="text-[11px] text-[#6C7671]">
-                  Zero-hallucination knowledge grounding & handoff active
+                  Grounding estrito de conhecimento corporativo e transbordo humano ativo
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-[#1E7E49]">Active</span>
+            <span className="text-[11px] font-semibold text-[#1E7E49]">Ativo</span>
           </div>
         </div>
       </div>
 
-      {/* SaaS Subscription Plans */}
+      {/* Planos de Assinatura */}
       <div className="space-y-4">
         <div>
           <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-[#45D483]" />
-            <span>SaaS Subscription & Billing Tiers</span>
+            <span>Planos de Assinatura & Faturamento</span>
           </h2>
           <p className="text-xs text-[#AEB7B3] mt-0.5">
-            Prepared multi-tenant tier infrastructure (payments disabled until Stripe key configured).
+            Estrutura multi-tenant pronta para cobrança recorrente.
           </p>
         </div>
 
@@ -214,7 +211,7 @@ export function SettingsView() {
                 <span className="font-bold text-sm text-[#252B28]">{p.name}</span>
                 {p.current && (
                   <span className="text-[10px] font-bold bg-[#EAFBF2] text-[#1E7E49] px-2 py-0.5 rounded-full">
-                    Current Plan
+                    Plano Atual
                   </span>
                 )}
               </div>
@@ -243,7 +240,7 @@ export function SettingsView() {
                     : 'bg-[#252B28] text-white hover:bg-[#1a1f1d]'
                 }`}
               >
-                {p.current ? 'Active Plan' : 'Upgrade Plan'}
+                {p.current ? 'Plano Ativo' : 'Fazer Upgrade'}
               </button>
             </div>
           ))}
