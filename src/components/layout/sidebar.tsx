@@ -1,25 +1,24 @@
 'use client';
 
 // ===================================================================
-// MOONKY MAIN SIDEBAR NAVIGATION
-// Clean, minimalist, premium sidebar strictly adhering to brand guidelines
+// MOONKY SLIM ICON RAIL NAVIGATION
+// Matching image.png design reference pixel-for-pixel
+// Palette: #FFFFFF, #F1F3F2, #AEB7B3, #252B28, #45D483
 // ===================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  LayoutDashboard,
-  Inbox,
-  Users,
+  Home,
+  Search,
+  Bookmark,
   Bot,
   Zap,
   BarChart3,
-  ShieldCheck,
-  Radio,
+  Share2,
   Settings,
-  HelpCircle,
-  Bell
+  Sun,
+  Moon
 } from 'lucide-react';
-import { MoonkyWordmark } from '@/components/ui/wordmark';
 import { useMoonky } from '@/context/moonky-store';
 import { currentUser } from '@/lib/mock-data';
 
@@ -40,84 +39,82 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
-  const { conversations, isLiveSupabase } = useMoonky();
+  const { conversations } = useMoonky();
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const navItems: { id: NavigationTab; label: string; icon: React.ElementType; badge?: number }[] = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'inbox', label: 'Inbox', icon: Inbox, badge: unreadTotal > 0 ? unreadTotal : undefined },
-    { id: 'contacts', label: 'Contacts', icon: Users },
-    { id: 'ai-assistant', label: 'AI Assistant', icon: Bot },
-    { id: 'automations', label: 'Automations', icon: Zap },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'team', label: 'Team', icon: ShieldCheck },
-    { id: 'integrations', label: 'Integrations', icon: Radio },
+  const navItems: {
+    id: NavigationTab;
+    label: string;
+    icon: React.ElementType;
+    badge?: number;
+  }[] = [
+    { id: 'inbox', label: 'Home', icon: Home, badge: unreadTotal > 0 ? unreadTotal : undefined },
+    { id: 'overview', label: 'Search', icon: Search },
+    { id: 'contacts', label: 'Saves', icon: Bookmark },
+    { id: 'ai-assistant', label: 'AI Bot', icon: Bot },
+    { id: 'automations', label: 'Auto', icon: Zap },
+    { id: 'analytics', label: 'Stats', icon: BarChart3 },
+    { id: 'integrations', label: 'Share', icon: Share2 },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E5E9E7] flex flex-col justify-between h-screen shrink-0 select-none">
-      {/* Top Header & Brand */}
-      <div>
-        <div className="h-16 px-6 flex items-center justify-between border-b border-[#F1F3F2]">
-          <div className="cursor-pointer" onClick={() => onSelectTab('overview')}>
-            <MoonkyWordmark size="md" />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              title="Notifications"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#AEB7B3] hover:text-[#252B28] hover:bg-[#F1F3F2] transition-colors"
-            >
-              <Bell className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+    <aside className="w-[74px] md:w-[78px] bg-white border-r border-[#E5E9E7]/80 flex flex-col justify-between items-center py-5 shrink-0 select-none z-20">
+      {/* Top: Stylized Moonky Monogram Glyph */}
+      <div className="flex flex-col items-center gap-6">
+        <button
+          onClick={() => onSelectTab('inbox')}
+          title="Moonky Intelligent Omnichannel"
+          className="relative w-11 h-11 rounded-2xl bg-gradient-to-b from-[#252B28] to-[#171B19] flex items-center justify-center text-white shadow-md hover:scale-105 transition-transform"
+        >
+          <span className="font-extrabold text-lg tracking-tighter text-white">M</span>
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#45D483] ring-2 ring-[#252B28]" />
+        </button>
 
-        {/* Environment Status Badge */}
-        <div className="px-5 py-3 border-b border-[#F1F3F2]">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-[#AEB7B3] font-medium">Environment</span>
-            <span
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
-                isLiveSupabase
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${isLiveSupabase ? 'bg-[#45D483]' : 'bg-amber-500'}`}
-              />
-              {isLiveSupabase ? 'Supabase Live' : 'Demo Mode'}
-            </span>
-          </div>
-          <p className="text-[11px] text-[#AEB7B3] mt-1 truncate">Org: Moonky Technologies</p>
-        </div>
-
-        {/* Main Navigation Links */}
-        <nav className="p-3 space-y-1">
+        {/* Navigation Icon List (with small text underneath as in image.png) */}
+        <nav className="flex flex-col items-center gap-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
+
             return (
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                title={item.label}
+                className={`group relative flex flex-col items-center justify-center gap-1 w-13 py-1.5 rounded-2xl transition-all ${
                   isActive
-                    ? 'bg-[#F1F3F2] text-[#252B28] font-semibold'
-                    : 'text-[#AEB7B3] hover:text-[#252B28] hover:bg-[#F7F9F8]'
+                    ? 'text-[#252B28]'
+                    : 'text-[#AEB7B3] hover:text-[#252B28] hover:bg-[#F1F3F2]/60'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon
-                    className={`w-4 h-4 transition-colors ${
-                      isActive ? 'text-[#252B28]' : 'text-[#AEB7B3]'
-                    }`}
-                  />
-                  <span>{item.label}</span>
+                {/* Active Indicator Pill */}
+                {isActive && (
+                  <span className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#45D483] rounded-r-full" />
+                )}
+
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    isActive
+                      ? 'bg-[#252B28] text-white shadow-xs'
+                      : 'text-[#AEB7B3] group-hover:text-[#252B28]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
                 </div>
+
+                <span
+                  className={`text-[9.5px] font-medium leading-none transition-colors ${
+                    isActive ? 'font-bold text-[#252B28]' : 'text-[#AEB7B3] group-hover:text-[#252B28]'
+                  }`}
+                >
+                  {item.label}
+                </span>
+
+                {/* Badge if unread */}
                 {item.badge !== undefined && (
-                  <span className="bg-[#45D483] text-[#252B28] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <span className="absolute top-0 right-1 w-4 h-4 bg-[#45D483] text-[#252B28] text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-xs">
                     {item.badge}
                   </span>
                 )}
@@ -127,33 +124,48 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
         </nav>
       </div>
 
-      {/* Footer Profile & Help */}
-      <div className="p-4 border-t border-[#F1F3F2] space-y-3">
+      {/* Bottom: Day/Night Capsule Toggle & User Avatar (matching image.png) */}
+      <div className="flex flex-col items-center gap-4">
+        {/* Day / Night Vertical Capsule Switch */}
+        <div className="bg-[#F1F3F2] p-1 rounded-full flex flex-col items-center gap-1 shadow-inner">
+          <button
+            onClick={() => setIsDarkMode(false)}
+            title="Light mode"
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              !isDarkMode
+                ? 'bg-white text-[#252B28] shadow-xs'
+                : 'text-[#AEB7B3] hover:text-[#252B28]'
+            }`}
+          >
+            <Sun className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setIsDarkMode(true)}
+            title="Dark mode"
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              isDarkMode
+                ? 'bg-[#252B28] text-white shadow-xs'
+                : 'text-[#AEB7B3] hover:text-[#252B28]'
+            }`}
+          >
+            <Moon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* User Profile Avatar with Online Ring */}
         <button
           onClick={() => onSelectTab('settings')}
-          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-[#F1F3F2] transition-colors text-left"
+          title={`${currentUser.fullName} (${currentUser.role})`}
+          className="relative group focus:outline-none"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={currentUser.avatarUrl}
             alt={currentUser.fullName}
-            className="w-9 h-9 rounded-full object-cover border border-[#E5E9E7]"
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-offset-2 ring-[#45D483] group-hover:scale-105 transition-transform"
           />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#252B28] truncate">{currentUser.fullName}</p>
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#45D483]" />
-              <p className="text-xs text-[#AEB7B3] truncate capitalize">{currentUser.role}</p>
-            </div>
-          </div>
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#45D483] ring-2 ring-white" />
         </button>
-
-        <div className="flex items-center justify-between text-xs text-[#AEB7B3] px-2 pt-1 border-t border-[#F1F3F2]">
-          <span className="flex items-center gap-1 cursor-pointer hover:text-[#252B28]">
-            <HelpCircle className="w-3.5 h-3.5" /> Support
-          </span>
-          <span className="text-[10px]">v1.0.0</span>
-        </div>
       </div>
     </aside>
   );

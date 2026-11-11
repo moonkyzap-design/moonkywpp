@@ -77,7 +77,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F1F3F2] p-8 space-y-8 select-none">
+    <div className="flex-1 overflow-y-auto bg-[#FAFBFB] p-8 space-y-8 select-none">
       {/* Top Welcome & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

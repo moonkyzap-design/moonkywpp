@@ -2,7 +2,8 @@
 
 // ===================================================================
 // MOONKY MAIN APPLICATION SHELL
-// Unifying Omnichannel Inbox, Dashboard, CRM, AI Studio & Settings
+// Floating rounded container matching image.png reference pixel-for-pixel
+// Palette: #FFFFFF, #F1F3F2, #AEB7B3, #252B28, #45D483
 // ===================================================================
 
 import React, { useState } from 'react';
@@ -22,22 +23,25 @@ function AppShell() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('inbox');
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F1F3F2]">
-      {/* Primary Sidebar */}
-      <Sidebar currentTab={currentTab} onSelectTab={setCurrentTab} />
+    <div className="h-screen w-screen bg-[#EAEFEA] p-0 sm:p-2 md:p-3.5 lg:p-4 flex items-center justify-center overflow-hidden font-sans antialiased selection:bg-[#45D483]/30">
+      {/* Floating Enclosed Application Container (from image.png) */}
+      <div className="w-full max-w-[1600px] h-full sm:h-[calc(100vh-16px)] md:h-[calc(100vh-28px)] bg-white sm:rounded-[28px] md:rounded-[36px] shadow-[0_20px_70px_-10px_rgba(0,0,0,0.07)] border border-[#E2E7E4] flex overflow-hidden">
+        {/* Slim Left Navigation Rail */}
+        <Sidebar currentTab={currentTab} onSelectTab={setCurrentTab} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden">
-        {currentTab === 'inbox' && <InboxView />}
-        {currentTab === 'overview' && <OverviewView onNavigate={setCurrentTab} />}
-        {currentTab === 'contacts' && <ContactsView onNavigate={setCurrentTab} />}
-        {currentTab === 'ai-assistant' && <AIAssistantView />}
-        {currentTab === 'automations' && <AutomationsView />}
-        {currentTab === 'analytics' && <AnalyticsView />}
-        {currentTab === 'team' && <TeamView />}
-        {currentTab === 'integrations' && <IntegrationsView />}
-        {currentTab === 'settings' && <SettingsView />}
-      </main>
+        {/* Dynamic Main Workspace Area */}
+        <main className="flex-1 flex overflow-hidden min-w-0 bg-white">
+          {currentTab === 'inbox' && <InboxView />}
+          {currentTab === 'overview' && <OverviewView onNavigate={setCurrentTab} />}
+          {currentTab === 'contacts' && <ContactsView onNavigate={setCurrentTab} />}
+          {currentTab === 'ai-assistant' && <AIAssistantView />}
+          {currentTab === 'automations' && <AutomationsView />}
+          {currentTab === 'analytics' && <AnalyticsView />}
+          {currentTab === 'team' && <TeamView />}
+          {currentTab === 'integrations' && <IntegrationsView />}
+          {currentTab === 'settings' && <SettingsView />}
+        </main>
+      </div>
     </div>
   );
 }
