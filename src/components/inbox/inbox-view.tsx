@@ -69,15 +69,22 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [activeSegment, setActiveSegment] = useState<'all' | 'whatsapp' | 'instagram'>('all');
   const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
   const [rightTab, setRightTab] = useState<'media' | 'files' | 'voice' | 'links' | 'notes'>('media');
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
   const [notificationsMuted, setNotificationsMuted] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
-  // Estados de Gravação de Áudio
+  // Estados e referências de Gravação de Áudio Real
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Estados e referências de Reprodução de Áudio Real
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioCurrentTime, setAudioCurrentTime] = useState<number>(0);
 
   // Estados de Chamada de Voz / Vídeo
   const [activeCall, setActiveCall] = useState<{
@@ -164,55 +171,170 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     setShowAttachMenu(false);
   };
 
-  // Gravação de Áudio: Iniciar
-  const handleStartRecording = () => {
-    setIsRecording(true);
+  // Gravação de Áudio Real via Microfone do Navegador
+  const handleStartRecording = async () => {
+    try {
+      if (typeof window === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Seu navegador não suporta gravação de áudio pelo microfone.');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      let mimeType = '';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+          mimeType = 'audio/ogg';
+        }
+      }
+
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.start(100);
+      setIsRecording(true);
+      setRecordingSeconds(0);
+    } catch (err: unknown) {
+      console.error('Erro ao acessar o microfone:', err);
+      alert('Permissão de microfone negada. Por favor, autorize o microfone no navegador para gravar áudio.');
+    }
   };
 
   // Gravação de Áudio: Cancelar
   const handleCancelRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    audioChunksRef.current = [];
     setIsRecording(false);
     setRecordingSeconds(0);
   };
 
-  // Gravação de Áudio: Concluir e Enviar
+  // Gravação de Áudio: Concluir e Enviar com Áudio Real Base64
   const handleFinishRecording = async () => {
+    if (!mediaRecorderRef.current) {
+      setIsRecording(false);
+      return;
+    }
+
+    const recorder = mediaRecorderRef.current;
+    const finalSeconds = Math.max(recordingSeconds, 1);
+
+    recorder.onstop = () => {
+      const mimeType = recorder.mimeType || 'audio/webm';
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        await sendMessage(`Mensagem de voz ${finalSeconds}"`, 'audio', base64Audio);
+      };
+      reader.readAsDataURL(audioBlob);
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      audioChunksRef.current = [];
+      setRecordingSeconds(0);
+    };
+
+    if (recorder.state !== 'inactive') {
+      recorder.stop();
+    }
     setIsRecording(false);
-    const duration = Math.max(recordingSeconds, 3);
-    await sendMessage(`Mensagem de voz ${duration}"`, 'audio');
-    setRecordingSeconds(0);
   };
 
-  // Reprodução de Áudio com Síntese Sonora Real
-  const togglePlayAudio = (msgId: string) => {
+  // Reprodução de Áudio Real (Reproduz o som gravado no microfone)
+  const togglePlayAudio = (msgId: string, mediaUrl?: string) => {
+    // Se o mesmo áudio já estiver tocando, pausa
     if (playingAudioId === msgId) {
+      if (activeAudioRef.current) {
+        activeAudioRef.current.pause();
+      }
       setPlayingAudioId(null);
-    } else {
+      return;
+    }
+
+    // Se outro áudio estiver tocando, interrompe
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+
+    // Reproduzir mídia real (Base64 ou URL de áudio)
+    if (
+      mediaUrl &&
+      (mediaUrl.startsWith('data:audio') ||
+        mediaUrl.startsWith('blob:') ||
+        mediaUrl.startsWith('http'))
+    ) {
+      const audio = new Audio(mediaUrl);
+      activeAudioRef.current = audio;
       setPlayingAudioId(msgId);
-      // Efeito sonoro suave de voz com Web Audio API
+      setAudioCurrentTime(0);
+
+      audio.ontimeupdate = () => {
+        setAudioCurrentTime(audio.currentTime);
+      };
+
+      audio.onended = () => {
+        setPlayingAudioId(null);
+        setAudioCurrentTime(0);
+      };
+
+      audio.onerror = () => {
+        setPlayingAudioId(null);
+      };
+
+      audio.play().catch((err) => {
+        console.warn('Erro ao reproduzir áudio real:', err);
+        setPlayingAudioId(null);
+      });
+    } else {
+      // Mensagem de voz de demonstração (efeito acústico suave)
+      setPlayingAudioId(msgId);
       try {
         if (typeof window !== 'undefined' && 'AudioContext' in window) {
-          const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+          const ctx = new (window.AudioContext ||
+            (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(440, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3);
+          osc.frequency.setValueAtTime(340, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(560, ctx.currentTime + 0.4);
           gain.gain.setValueAtTime(0.08, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start();
-          osc.stop(ctx.currentTime + 0.3);
+          osc.stop(ctx.currentTime + 1.2);
         }
-      } catch {
-        // Fallback silencioso
-      }
+      } catch {}
 
-      // Desativa após 4 segundos automaticamente se não pausado
       setTimeout(() => {
         setPlayingAudioId((curr) => (curr === msgId ? null : curr));
-      }, 4000);
+      }, 1500);
     }
   };
 
@@ -602,9 +724,9 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                           }`}
                         >
                           <button
-                            onClick={() => togglePlayAudio(msg.id)}
+                            onClick={() => togglePlayAudio(msg.id, msg.mediaUrl)}
                             className="w-8 h-8 rounded-full bg-[#45D483] text-[#252B28] flex items-center justify-center shrink-0 hover:scale-105 transition-all shadow-xs"
-                            title={isAudioPlaying ? 'Pausar áudio' : 'Ouvir áudio'}
+                            title={isAudioPlaying ? 'Pausar áudio' : 'Ouvir áudio gravado'}
                           >
                             {isAudioPlaying ? (
                               <Pause className="w-4 h-4 fill-[#252B28] text-[#252B28]" />
@@ -633,7 +755,13 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                           </div>
 
                           <span className="text-xs font-mono font-bold text-[#45D483] shrink-0">
-                            {msg.content.includes('"') ? msg.content.replace('Mensagem de voz ', '') : '0:12'}
+                            {isAudioPlaying && audioCurrentTime > 0
+                              ? `${Math.floor(audioCurrentTime / 60)}:${Math.floor(audioCurrentTime % 60)
+                                  .toString()
+                                  .padStart(2, '0')}`
+                              : msg.content.includes('"')
+                              ? msg.content.replace('Mensagem de voz ', '')
+                              : '0:12'}
                           </span>
                         </div>
                       )}

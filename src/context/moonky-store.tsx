@@ -262,7 +262,28 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       return updated;
     });
 
-    // Call server-side API endpoint asynchronously
+    // 1. Salvar no Banco de Dados Real (Supabase)
+    try {
+      fetch('/api/messages/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: activeConversationId,
+          content: content.trim(),
+          messageType: type,
+          mediaUrl,
+          senderType: 'agent',
+          channelType: activeConversation?.channelType || 'whatsapp'
+        })
+      })
+        .then((r) => r.json())
+        .then((res) => console.log('[BANCO_REAL_SUPABASE_SALVO]', res))
+        .catch((e) => console.warn('[BANCO_REAL_AVISO]', e));
+    } catch (e) {
+      // non-blocking
+    }
+
+    // 2. Despachar via API Oficial WAME (WhatsApp / Instagram Direct)
     try {
       fetch('/api/messages/send', {
         method: 'POST',
