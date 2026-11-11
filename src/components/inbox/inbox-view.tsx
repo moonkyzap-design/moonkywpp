@@ -154,12 +154,12 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   };
 
   // Envio de Documento / Anexo
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-    sendMessage(`${file.name} (${sizeStr})`, 'document');
+    await sendMessage(`${file.name} (${sizeStr})`, 'document');
     e.target.value = '';
     setShowAttachMenu(false);
   };
@@ -443,7 +443,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     <span className="w-1.5 h-1.5 rounded-full bg-[#45D483]"></span>
                     {activeConversation.channelType === 'whatsapp'
                       ? `WhatsApp (${activeConversation.contact.phone || '+55 11 98877-1122'})`
-                      : `Instagram Direct (@${activeConversation.contact.instagramUsername || 'uiux_designers'})`}
+                      : `Instagram Direct (@${activeConversation.contact.instagramUsername || 'contato'})`}
                   </p>
                 </div>
               </div>
@@ -515,7 +515,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="flex justify-center">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#AEB7B3] bg-[#F1F3F2] px-3 py-1 rounded-full">
-                  CONVERSA UNIFICADA · {activeConversation.channelType === 'whatsapp' ? 'WHATSAPP OFICIAL' : 'INSTAGRAM DIRECT'}
+                  CONVERSA INDIVIDUAL · {activeConversation.channelType === 'whatsapp' ? 'WHATSAPP OFICIAL' : 'INSTAGRAM DIRECT'}
                 </span>
               </div>
 
@@ -832,7 +832,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               <p className="text-xs text-[#AEB7B3]">
                 {activeConversation.channelType === 'whatsapp'
                   ? activeConversation.contact.phone || '+55 11 98877-1122'
-                  : `@${activeConversation.contact.instagramUsername || 'uiux_designers'}`}
+                  : `@${activeConversation.contact.instagramUsername || 'contato'}`}
               </p>
 
               <div className="flex items-center justify-center gap-1.5 pt-1">
@@ -981,7 +981,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               <p className="text-xs text-[#AEB7B3] mt-0.5">
                 {activeCall.channelType === 'whatsapp'
                   ? `Ligando via WhatsApp (${activeCall.contact.phone || '+55 11 98877-1122'})`
-                  : `Ligando via Instagram (@${activeCall.contact.instagramUsername || 'uiux_designers'})`}
+                  : `Ligando via Instagram (@${activeCall.contact.instagramUsername || 'contato'})`}
               </p>
             </div>
 

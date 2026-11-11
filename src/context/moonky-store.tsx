@@ -95,7 +95,7 @@ const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
 
 export function MoonkyStoreProvider({ children }: { children: React.ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>('conv-uiux-01');
+  const [activeConversationId, setActiveConversationId] = useState<string | null>('conv-mariana-01');
   const [messages, setMessages] = useState<Record<string, Message[]>>(initialMessages);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
@@ -129,6 +129,26 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         setIsDarkModeState(true);
         document.documentElement.classList.add('dark');
+      }
+
+      // Carregar cache persistente de conversas e mensagens
+      try {
+        const cachedMsgs = localStorage.getItem('moonky_messages_v4');
+        if (cachedMsgs) {
+          const parsed = JSON.parse(cachedMsgs);
+          if (parsed && typeof parsed === 'object') {
+            setMessages((prev) => ({ ...prev, ...parsed }));
+          }
+        }
+        const cachedConvs = localStorage.getItem('moonky_conversations_v4');
+        if (cachedConvs) {
+          const parsed = JSON.parse(cachedConvs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setConversations(parsed);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load local storage cache', err);
       }
     }
   }, []);
@@ -199,10 +219,19 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       timestamp: timeStr
     };
 
-    setMessages((prev) => ({
-      ...prev,
-      [activeConversationId]: [...(prev[activeConversationId] || []), newMsg]
-    }));
+    setMessages((prev) => {
+      const currentList = prev[activeConversationId] || [];
+      const updated = {
+        ...prev,
+        [activeConversationId]: [...currentList, newMsg]
+      };
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
 
     const snippet =
       type === 'image'
@@ -214,8 +243,8 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         : content.trim();
 
     // Update conversation snippet and time
-    setConversations((prev) =>
-      prev.map((c) =>
+    setConversations((prev) => {
+      const updated = prev.map((c) =>
         c.id === activeConversationId
           ? {
               ...c,
@@ -224,8 +253,14 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
               unreadCount: 0
             }
           : c
-      )
-    );
+      );
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
 
     // Call server-side API endpoint asynchronously
     try {
@@ -260,15 +295,23 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       timestamp: timeStr
     };
 
-    setMessages((prev) => ({
-      ...prev,
-      [convId]: [...(prev[convId] || []), customerMsg]
-    }));
+    setMessages((prev) => {
+      const updated = {
+        ...prev,
+        [convId]: [...(prev[convId] || []), customerMsg]
+      };
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
 
     const targetConv = conversations.find((c) => c.id === convId);
 
-    setConversations((prev) =>
-      prev.map((c) =>
+    setConversations((prev) => {
+      const updated = prev.map((c) =>
         c.id === convId
           ? {
               ...c,
@@ -277,8 +320,14 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
               unreadCount: c.id === activeConversationId ? 0 : c.unreadCount + 1
             }
           : c
-      )
-    );
+      );
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
 
     // Evaluate AI rules:
     // AI responds only if conversation has AI enabled AND aiStatus is 'active' (NOT paused, NOT handed_off)
@@ -319,13 +368,21 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         }
       };
 
-      setMessages((prev) => ({
-        ...prev,
-        [convId]: [...(prev[convId] || []), aiMsg]
-      }));
+      setMessages((prev) => {
+        const updated = {
+          ...prev,
+          [convId]: [...(prev[convId] || []), aiMsg]
+        };
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
 
-      setConversations((prev) =>
-        prev.map((c) =>
+      setConversations((prev) => {
+        const updated = prev.map((c) =>
           c.id === convId
             ? {
                 ...c,
@@ -336,8 +393,14 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
                 assignedAgent: aiResponse.isHandoffRequired ? currentUser : c.assignedAgent
               }
             : c
-        )
-      );
+        );
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
 
       // If handoff required, append automated system note
       if (aiResponse.isHandoffRequired) {

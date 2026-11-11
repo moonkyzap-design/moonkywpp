@@ -102,12 +102,12 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
   const handleSendTestWebhook = async (type: 'whatsapp' | 'instagram') => {
     if (type === 'whatsapp') {
       await simulateCustomerIncomingMessage(
-        'conv-uiux-01',
+        'conv-mariana-01',
         'Olá! Mensagem real recebida do WhatsApp via integração WAME QR Code.'
       );
     } else {
       await simulateCustomerIncomingMessage(
-        'conv-uiux-01',
+        'conv-mariana-01',
         'Olá! Mensagem real recebida do Instagram Direct Oficial via WAME Meta Cloud.'
       );
     }
