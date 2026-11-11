@@ -19,7 +19,8 @@ import {
   AnalyticsSummary,
   ChannelType,
   ConversationStatus,
-  AIStatus
+  AIStatus,
+  MessageType
 } from '@/types';
 import {
   initialOrganization,
@@ -74,7 +75,7 @@ interface MoonkyStoreContextType {
 
   // Actions
   setActiveConversationId: (id: string) => void;
-  sendMessage: (content: string, type?: 'text' | 'image' | 'document') => Promise<void>;
+  sendMessage: (content: string, type?: MessageType, mediaUrl?: string) => Promise<void>;
   simulateCustomerIncomingMessage: (convId: string, text: string) => Promise<void>;
   updateConversationStatus: (convId: string, status: ConversationStatus) => void;
   updateConversationAIStatus: (convId: string, aiStatus: AIStatus) => void;
@@ -176,9 +177,15 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   /**
    * Send agent message and optionally trigger server-side WAME dispatch
    */
-  const sendMessage = async (content: string, type: 'text' | 'image' | 'document' = 'text') => {
-    if (!activeConversationId || !content.trim()) return;
+  const sendMessage = async (
+    content: string,
+    type: MessageType = 'text',
+    mediaUrl?: string
+  ) => {
+    if (!activeConversationId) return;
+    if (type === 'text' && !content.trim()) return;
 
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const newMsg: Message = {
       id: `msg-agent-${Date.now()}`,
       conversationId: activeConversationId,
@@ -187,8 +194,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       senderName: currentUser.fullName,
       content: content.trim(),
       messageType: type,
+      mediaUrl,
       deliveryStatus: 'delivered',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: timeStr
     };
 
     setMessages((prev) => ({
@@ -196,14 +204,23 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       [activeConversationId]: [...(prev[activeConversationId] || []), newMsg]
     }));
 
+    const snippet =
+      type === 'image'
+        ? '📷 Foto'
+        : type === 'audio'
+        ? '🎙 Mensagem de voz'
+        : type === 'document'
+        ? `📄 ${content}`
+        : content.trim();
+
     // Update conversation snippet and time
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeConversationId
           ? {
               ...c,
-              lastMessageSnippet: content.trim(),
-              lastMessageAt: newMsg.timestamp,
+              lastMessageSnippet: snippet,
+              lastMessageAt: timeStr,
               unreadCount: 0
             }
           : c

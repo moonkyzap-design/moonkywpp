@@ -269,7 +269,7 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'contact',
       senderId: 'user-mobin-02',
       senderName: 'Mobin',
-      content: "Hi guys, have you completed your Design's?",
+      content: 'Olá pessoal, vocês já concluíram os designs?',
       messageType: 'text',
       deliveryStatus: 'delivered',
       timestamp: '14:23'
@@ -280,10 +280,10 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'contact',
       senderId: 'user-arshia-03',
       senderName: 'Arshia',
-      content: 'Hey Mahdi, Send your designs.',
+      content: 'Oi Mahdi, envie os seus designs aqui.',
       messageType: 'text',
       deliveryStatus: 'delivered',
-      timestamp: '14:23'
+      timestamp: '14:24'
     },
     {
       id: 'msg-03',
@@ -291,7 +291,7 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'contact',
       senderId: 'user-mahdi-04',
       senderName: 'Mahdi',
-      content: 'Are my new designs attractive? I would love to know your opinion about it 😎✌️',
+      content: 'O que acharam das novas telas? Gostaria muito da opinião de vocês 😎✌️',
       messageType: 'image',
       mediaUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600',
       deliveryStatus: 'delivered',
@@ -303,7 +303,7 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'agent',
       senderId: 'user-hana-01',
       senderName: 'Hana',
-      content: 'Hi Mahdi, your work is really amazing 😍',
+      content: 'Oi Mahdi, o trabalho de vocês está incrível 😍',
       messageType: 'text',
       deliveryStatus: 'read',
       timestamp: '22:10'
@@ -314,7 +314,7 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'agent',
       senderId: 'user-hana-01',
       senderName: 'Hana',
-      content: 'Voice memo 12"',
+      content: 'Mensagem de voz 12"',
       messageType: 'audio',
       deliveryStatus: 'read',
       timestamp: '22:11'
@@ -327,10 +327,82 @@ export const initialMessages: Record<string, Message[]> = {
       senderType: 'contact',
       senderId: 'cnt-darya-02',
       senderName: 'Darya',
-      content: 'Please send all the pictures here.',
+      content: 'Por favor, envie todas as fotos por aqui.',
       messageType: 'text',
       deliveryStatus: 'delivered',
       timestamp: '13:42'
+    },
+    {
+      id: 'msg-d2',
+      conversationId: 'conv-darya-02',
+      senderType: 'agent',
+      senderId: 'user-hana-01',
+      senderName: 'Hana',
+      content: 'Perfeito Darya, estou enviando os arquivos agora mesmo!',
+      messageType: 'text',
+      deliveryStatus: 'read',
+      timestamp: '13:45'
+    }
+  ],
+  'conv-omid-03': [
+    {
+      id: 'msg-o1',
+      conversationId: 'conv-omid-03',
+      senderType: 'contact',
+      senderId: 'cnt-omid-03',
+      senderName: 'Omid',
+      content: 'Mensagem de voz 24"',
+      messageType: 'audio',
+      deliveryStatus: 'delivered',
+      timestamp: '12:20'
+    },
+    {
+      id: 'msg-o2',
+      conversationId: 'conv-omid-03',
+      senderType: 'agent',
+      senderId: 'user-hana-01',
+      senderName: 'Hana',
+      content: 'Áudio recebido Omid, já estou ouvindo para te responder.',
+      messageType: 'text',
+      deliveryStatus: 'read',
+      timestamp: '12:23'
+    }
+  ],
+  'conv-emell-04': [
+    {
+      id: 'msg-e1',
+      conversationId: 'conv-emell-04',
+      senderType: 'contact',
+      senderId: 'cnt-emell-04',
+      senderName: 'Emell',
+      content: 'Olá Hana, tudo bem com você hoje?',
+      messageType: 'text',
+      deliveryStatus: 'delivered',
+      timestamp: '12:20'
+    },
+    {
+      id: 'msg-e2',
+      conversationId: 'conv-emell-04',
+      senderType: 'agent',
+      senderId: 'user-hana-01',
+      senderName: 'Hana',
+      content: 'Olá Emell! Tudo ótimo por aqui, como posso ajudar você?',
+      messageType: 'text',
+      deliveryStatus: 'read',
+      timestamp: '12:23'
+    }
+  ],
+  'conv-sanaz-05': [
+    {
+      id: 'msg-s1',
+      conversationId: 'conv-sanaz-05',
+      senderType: 'contact',
+      senderId: 'cnt-sanaz-05',
+      senderName: 'Sanaz',
+      content: 'Estou com instabilidade na conexão, podem verificar meu plano?',
+      messageType: 'text',
+      deliveryStatus: 'delivered',
+      timestamp: '08:21'
     }
   ]
 };
