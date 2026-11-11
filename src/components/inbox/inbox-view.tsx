@@ -36,11 +36,15 @@ import {
   Download,
   ExternalLink,
   Volume2,
-  VideoOff
+  VideoOff,
+  Pin,
+  PinOff,
+  Archive,
+  Trash2
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
 import { currentUser } from '@/lib/mock-data';
-import { Message, MessageType, Contact, ChannelType } from '@/types';
+import { Message, MessageType, Contact, ChannelType, Conversation } from '@/types';
 
 interface InboxViewProps {
   onOpenConnectModal?: () => void;
@@ -61,7 +65,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     teamMembers,
     searchQuery,
     setSearchQuery,
-    isTyping
+    isTyping,
+    pinMessage,
+    unpinMessage,
+    archiveMessage,
+    deleteMessage
   } = useMoonky();
 
   // Estados de entrada e abas
@@ -72,6 +80,21 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [noteInput, setNoteInput] = useState('');
   const [notificationsMuted, setNotificationsMuted] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+
+  // Estados de Menu de Contexto Minimalista (Fixar, Arquivar, Excluir)
+  const [contextMenu, setContextMenu] = useState<{
+    isOpen: boolean;
+    x: number;
+    y: number;
+    message: Message | null;
+  }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    message: null
+  });
+  const [pinToast, setPinToast] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState<boolean>(false);
 
   // Estados e referências de Gravação de Áudio Real
   const [isRecording, setIsRecording] = useState(false);
@@ -371,17 +394,118 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     setNoteInput('');
   };
 
-  const filteredList = conversations.filter((c) => {
-    if (activeSegment !== 'all' && c.channelType !== activeSegment) return false;
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase();
-      return (
-        c.contact.name.toLowerCase().includes(q) ||
-        c.lastMessageSnippet.toLowerCase().includes(q)
-      );
+  // Fechar menu de contexto ao clicar fora ou pressionar Escape
+  useEffect(() => {
+    const handleClose = () => {
+      if (contextMenu.isOpen) {
+        setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && contextMenu.isOpen) {
+        setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+      }
+    };
+    window.addEventListener('click', handleClose);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('click', handleClose);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [contextMenu.isOpen]);
+
+  // Abertura de menu via botão direito
+  const handleContextMenu = (e: React.MouseEvent, msg: Message) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menuWidth = 190;
+    const menuHeight = 150;
+    const posX = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const posY = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+    setContextMenu({
+      isOpen: true,
+      x: Math.max(10, posX),
+      y: Math.max(10, posY),
+      message: msg
+    });
+  };
+
+  // Abertura de menu via 3 pontinhos minimalistas
+  const handleDotsClick = (e: React.MouseEvent, msg: Message) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuWidth = 190;
+    const menuHeight = 150;
+    const posX = Math.min(rect.left, window.innerWidth - menuWidth - 10);
+    const posY = Math.min(rect.bottom + 6, window.innerHeight - menuHeight - 10);
+    setContextMenu({
+      isOpen: true,
+      x: Math.max(10, posX),
+      y: Math.max(10, posY),
+      message: msg
+    });
+  };
+
+  // Ações de Mensagem: Fixar / Desafixar (até 5 mensagens)
+  const handleTogglePin = (msg: Message) => {
+    if (!activeConversation) return;
+    if (msg.isPinned) {
+      unpinMessage(activeConversation.id, msg.id);
+    } else {
+      const success = pinMessage(activeConversation.id, msg.id);
+      if (!success) {
+        setPinToast('Limite de 5 mensagens fixadas atingido. Desafixe uma para fixar outra.');
+        setTimeout(() => setPinToast(null), 3500);
+      }
     }
-    return true;
-  });
+    setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+  };
+
+  // Ações de Mensagem: Arquivar / Desarquivar
+  const handleToggleArchive = (msg: Message) => {
+    if (!activeConversation) return;
+    archiveMessage(activeConversation.id, msg.id);
+    setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+  };
+
+  // Ações de Mensagem: Excluir
+  const handleDelete = (msg: Message) => {
+    if (!activeConversation) return;
+    deleteMessage(activeConversation.id, msg.id);
+    setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+  };
+
+  // Ordenação de conversas pela última mensagem enviada ou recebida
+  const getConversationTimeValue = (conv: Conversation): number => {
+    if (conv.lastMessageTimestamp) return conv.lastMessageTimestamp;
+    if (conv.lastMessageAt) {
+      const parts = conv.lastMessageAt.split(':');
+      if (parts.length === 2) {
+        const d = new Date();
+        d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+        return d.getTime();
+      }
+    }
+    return 0;
+  };
+
+  const filteredList = conversations
+    .filter((c) => {
+      if (activeSegment !== 'all' && c.channelType !== activeSegment) return false;
+      if (searchQuery.trim().length > 0) {
+        const q = searchQuery.toLowerCase();
+        return (
+          c.contact.name.toLowerCase().includes(q) ||
+          c.lastMessageSnippet.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => getConversationTimeValue(b) - getConversationTimeValue(a));
+
+  const pinnedMessages = activeMessages.filter((m) => m.isPinned && !m.isArchived);
+  const archivedCount = activeMessages.filter((m) => m.isArchived).length;
 
   const activeNotes = activeConversationId ? notes[activeConversationId] || [] : [];
 
@@ -633,170 +757,279 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               </div>
             </div>
 
+            {/* BARRA MINIMALISTA DE MENSAGENS FIXADAS NO TOPO DO CHAT (ATÉ 5) */}
+            {pinnedMessages.length > 0 && (
+              <div className="bg-[#FAFBFB] dark:bg-[#181D1A] border-b border-[#E5E9E7] dark:border-[#262E2A] px-6 py-2 flex items-center justify-between text-xs transition-colors shrink-0">
+                <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                  <div className="w-6 h-6 rounded-lg bg-[#EAFBF2] dark:bg-[#45D483]/15 text-[#45D483] flex items-center justify-center shrink-0">
+                    <Pin className="w-3.5 h-3.5 fill-[#45D483]" />
+                  </div>
+                  <span className="text-[11px] font-bold text-[#252B28] dark:text-white shrink-0">
+                    Fixadas ({pinnedMessages.length}/5):
+                  </span>
+                  <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar flex-1">
+                    {pinnedMessages.map((pMsg, idx) => (
+                      <div
+                        key={pMsg.id}
+                        onClick={() => {
+                          const el = document.getElementById(`msg-${pMsg.id}`);
+                          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                        className="group flex items-center gap-1.5 bg-white dark:bg-[#222926] border border-[#E5E9E7] dark:border-[#2C3530] px-2.5 py-1 rounded-full cursor-pointer hover:border-[#45D483] transition-all shrink-0 max-w-[200px]"
+                        title="Clique para ir até a mensagem"
+                      >
+                        <span className="text-[10px] font-bold text-[#45D483]">#{idx + 1}</span>
+                        <span className="text-[11px] text-[#252B28] dark:text-gray-200 truncate">
+                          {pMsg.messageType === 'audio'
+                            ? '🎙 Mensagem de voz'
+                            : pMsg.messageType === 'image'
+                            ? '📷 Foto'
+                            : pMsg.messageType === 'document'
+                            ? '📄 Documento'
+                            : pMsg.content}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (activeConversation) unpinMessage(activeConversation.id, pMsg.id);
+                          }}
+                          title="Desafixar do topo"
+                          className="w-3.5 h-3.5 rounded-full hover:bg-rose-100 dark:hover:bg-rose-950 text-[#AEB7B3] hover:text-rose-500 flex items-center justify-center transition-colors ml-0.5"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Feed de Mensagens Dinâmico */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="flex justify-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#AEB7B3] bg-[#F1F3F2] px-3 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#AEB7B3] bg-[#F1F3F2] dark:bg-[#1D2320] px-3 py-1 rounded-full">
                   CONVERSA INDIVIDUAL · {activeConversation.channelType === 'whatsapp' ? 'WHATSAPP OFICIAL' : 'INSTAGRAM DIRECT'}
                 </span>
               </div>
 
-              {activeMessages.map((msg) => {
-                const isAgent = msg.senderType === 'agent';
-                const isAI = msg.senderType === 'ai';
-                const isCustomer = msg.senderType === 'contact';
-                const isAudioPlaying = playingAudioId === msg.id;
-
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-3 max-w-xl ${
-                      isAgent ? 'ml-auto flex-row-reverse text-right' : 'mr-auto text-left'
-                    }`}
+              {/* Banner de Mensagens Arquivadas (se houver) */}
+              {archivedCount > 0 && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setShowArchived(!showArchived)}
+                    className="text-[10px] font-semibold text-[#6C7671] bg-[#F1F3F2] dark:bg-[#1D2320] px-3 py-1 rounded-full hover:text-[#252B28] dark:hover:text-white transition-colors"
                   >
-                    {/* Avatar do Emissor */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        isAgent
-                          ? currentUser.avatarUrl
-                          : isAI
-                          ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100'
-                          : activeConversation.contact.avatarUrl
-                      }
-                      alt={msg.senderName || 'Avatar'}
-                      className="w-8 h-8 rounded-full object-cover shrink-0 mt-0.5"
-                    />
+                    {showArchived
+                      ? `Ocultar ${archivedCount} mensagem(ns) arquivada(s)`
+                      : `Ver ${archivedCount} mensagem(ns) arquivada(s)`}
+                  </button>
+                </div>
+              )}
 
-                    <div className="space-y-1">
-                      {/* Nome e Horário */}
-                      <div
-                        className={`text-[11px] font-semibold text-[#252B28] flex items-center gap-1.5 ${
-                          isAgent ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        {isAI && (
-                          <span className="bg-[#EAFBF2] text-[#1E7E49] text-[9px] font-bold px-1.5 py-0.2 rounded-full">
-                            IA Moonky
-                          </span>
-                        )}
-                        <span>{isAgent ? currentUser.fullName : msg.senderName || activeConversation.contact.name}</span>
-                        <span className="text-[#AEB7B3] font-normal">{msg.timestamp}</span>
-                      </div>
+              {activeMessages
+                .filter((m) => showArchived || !m.isArchived)
+                .map((msg) => {
+                  const isAgent = msg.senderType === 'agent';
+                  const isAI = msg.senderType === 'ai';
+                  const isCustomer = msg.senderType === 'contact';
+                  const isAudioPlaying = playingAudioId === msg.id;
 
-                      {/* Tipo: TEXTO */}
-                      {msg.messageType === 'text' && (
+                  return (
+                    <div
+                      key={msg.id}
+                      id={`msg-${msg.id}`}
+                      className={`group relative flex items-start gap-2.5 max-w-xl transition-all ${
+                        isAgent ? 'ml-auto flex-row-reverse text-right' : 'mr-auto text-left'
+                      }`}
+                    >
+                      {/* Avatar do Emissor */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          isAgent
+                            ? currentUser.avatarUrl
+                            : isAI
+                            ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100'
+                            : activeConversation.contact.avatarUrl
+                        }
+                        alt={msg.senderName || 'Avatar'}
+                        className="w-8 h-8 rounded-full object-cover shrink-0 mt-0.5"
+                      />
+
+                      <div className={`space-y-1 flex flex-col ${isAgent ? 'items-end' : 'items-start'}`}>
+                        {/* Nome, Horário e Badges */}
                         <div
-                          className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-xs ${
-                            isAgent
-                              ? 'bg-[#252B28] text-white rounded-tr-xs text-left'
-                              : isAI
-                              ? 'bg-[#EAFBF2] text-[#1E7E49] border border-emerald-200 rounded-tl-xs'
-                              : 'bg-white border border-[#E5E9E7] text-[#252B28] rounded-tl-xs'
+                          className={`text-[11px] font-semibold text-[#252B28] flex items-center gap-1.5 ${
+                            isAgent ? 'justify-end' : 'justify-start'
                           }`}
                         >
-                          {msg.content}
-                        </div>
-                      )}
+                          {isAI && (
+                            <span className="bg-[#EAFBF2] text-[#1E7E49] text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                              IA Moonky
+                            </span>
+                          )}
+                          <span>{isAgent ? currentUser.fullName : msg.senderName || activeConversation.contact.name}</span>
+                          <span className="text-[#AEB7B3] font-normal">{msg.timestamp}</span>
 
-                      {/* Tipo: FOTO / IMAGEM */}
-                      {msg.messageType === 'image' && (
-                        <div className="bg-white p-2 rounded-2xl border border-[#E5E9E7] shadow-xs space-y-1.5 max-w-sm">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={msg.mediaUrl || msg.content}
-                            alt="Foto enviada"
-                            className="rounded-xl object-cover max-h-64 w-full"
-                          />
-                          {msg.content && !msg.content.startsWith('data:') && (
-                            <p className="text-xs text-[#252B28] px-1">{msg.content}</p>
+                          {/* Badge de Mensagem Fixada */}
+                          {msg.isPinned && (
+                            <span
+                              className="flex items-center gap-0.5 text-[9px] font-bold text-[#45D483] bg-[#EAFBF2] dark:bg-[#45D483]/15 px-1.5 py-0.2 rounded-full"
+                              title="Mensagem fixada no topo do chat"
+                            >
+                              <Pin className="w-2.5 h-2.5 fill-[#45D483]" />
+                              <span>Fixada</span>
+                            </span>
+                          )}
+
+                          {/* Badge de Mensagem Arquivada */}
+                          {msg.isArchived && (
+                            <span className="text-[9px] font-semibold text-[#6C7671] bg-[#F1F3F2] dark:bg-[#252B28] px-1.5 py-0.2 rounded-full">
+                              Arquivada
+                            </span>
                           )}
                         </div>
-                      )}
 
-                      {/* Tipo: ÁUDIO */}
-                      {msg.messageType === 'audio' && (
+                        {/* Linha com Bolha + 3 Pontinhos Minimalistas */}
                         <div
-                          className={`p-2.5 px-4 rounded-full shadow-xs flex items-center gap-3 border ${
-                            isAgent
-                              ? 'bg-[#252B28] text-white border-[#333E38]'
-                              : 'bg-white border-[#E5E9E7] text-[#252B28]'
+                          className={`flex items-center gap-1.5 ${
+                            isAgent ? 'flex-row-reverse' : 'flex-row'
                           }`}
                         >
-                          <button
-                            onClick={() => togglePlayAudio(msg.id, msg.mediaUrl)}
-                            className="w-8 h-8 rounded-full bg-[#45D483] text-[#252B28] flex items-center justify-center shrink-0 hover:scale-105 transition-all shadow-xs"
-                            title={isAudioPlaying ? 'Pausar áudio' : 'Ouvir áudio gravado'}
+                          {/* Conteúdo com clique de botão direito */}
+                          <div
+                            onContextMenu={(e) => handleContextMenu(e, msg)}
+                            className="cursor-context-menu"
                           >
-                            {isAudioPlaying ? (
-                              <Pause className="w-4 h-4 fill-[#252B28] text-[#252B28]" />
-                            ) : (
-                              <Play className="w-4 h-4 fill-[#252B28] text-[#252B28] ml-0.5" />
+                            {/* Tipo: TEXTO */}
+                            {msg.messageType === 'text' && (
+                              <div
+                                className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-xs ${
+                                  isAgent
+                                    ? 'bg-[#252B28] text-white rounded-tr-xs text-left'
+                                    : isAI
+                                    ? 'bg-[#EAFBF2] text-[#1E7E49] border border-emerald-200 rounded-tl-xs'
+                                    : 'bg-white border border-[#E5E9E7] text-[#252B28] rounded-tl-xs'
+                                }`}
+                              >
+                                {msg.content}
+                              </div>
                             )}
-                          </button>
 
-                          {/* Barras de Onda Sonora com Animação */}
-                          <div className="flex items-center gap-0.5 h-6">
-                            {[6, 14, 22, 12, 18, 24, 16, 20, 10, 15, 22, 18, 14, 8, 16, 22, 12, 6].map(
-                              (h, i) => (
-                                <div
-                                  key={i}
-                                  style={{ height: `${h}px` }}
-                                  className={`w-1 rounded-full transition-all ${
-                                    isAudioPlaying
-                                      ? 'bg-[#45D483] animate-pulse'
-                                      : isAgent
-                                      ? 'bg-white/40'
-                                      : 'bg-[#AEB7B3]'
-                                  }`}
+                            {/* Tipo: FOTO / IMAGEM */}
+                            {msg.messageType === 'image' && (
+                              <div className="bg-white p-2 rounded-2xl border border-[#E5E9E7] shadow-xs space-y-1.5 max-w-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={msg.mediaUrl || msg.content}
+                                  alt="Foto enviada"
+                                  className="rounded-xl object-cover max-h-64 w-full"
                                 />
-                              )
+                                {msg.content && !msg.content.startsWith('data:') && (
+                                  <p className="text-xs text-[#252B28] px-1">{msg.content}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Tipo: ÁUDIO */}
+                            {msg.messageType === 'audio' && (
+                              <div
+                                className={`p-2.5 px-4 rounded-full shadow-xs flex items-center gap-3 border ${
+                                  isAgent
+                                    ? 'bg-[#252B28] text-white border-[#333E38]'
+                                    : 'bg-white border-[#E5E9E7] text-[#252B28]'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => togglePlayAudio(msg.id, msg.mediaUrl)}
+                                  className="w-8 h-8 rounded-full bg-[#45D483] text-[#252B28] flex items-center justify-center shrink-0 hover:scale-105 transition-all shadow-xs"
+                                  title={isAudioPlaying ? 'Pausar áudio' : 'Ouvir áudio gravado'}
+                                >
+                                  {isAudioPlaying ? (
+                                    <Pause className="w-4 h-4 fill-[#252B28] text-[#252B28]" />
+                                  ) : (
+                                    <Play className="w-4 h-4 fill-[#252B28] text-[#252B28] ml-0.5" />
+                                  )}
+                                </button>
+
+                                {/* Barras de Onda Sonora com Animação */}
+                                <div className="flex items-center gap-0.5 h-6">
+                                  {[6, 14, 22, 12, 18, 24, 16, 20, 10, 15, 22, 18, 14, 8, 16, 22, 12, 6].map(
+                                    (h, i) => (
+                                      <div
+                                        key={i}
+                                        style={{ height: `${h}px` }}
+                                        className={`w-1 rounded-full transition-all ${
+                                          isAudioPlaying
+                                            ? 'bg-[#45D483] animate-pulse'
+                                            : isAgent
+                                            ? 'bg-white/40'
+                                            : 'bg-[#AEB7B3]'
+                                        }`}
+                                      />
+                                    )
+                                  )}
+                                </div>
+
+                                <span className="text-xs font-mono font-bold text-[#45D483] shrink-0">
+                                  {isAudioPlaying && audioCurrentTime > 0
+                                    ? `${Math.floor(audioCurrentTime / 60)}:${Math.floor(audioCurrentTime % 60)
+                                        .toString()
+                                        .padStart(2, '0')}`
+                                    : msg.content.includes('"')
+                                    ? msg.content.replace('Mensagem de voz ', '')
+                                    : '0:12'}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Tipo: DOCUMENTO / ARQUIVO */}
+                            {msg.messageType === 'document' && (
+                              <div className="bg-white p-3 rounded-2xl border border-[#E5E9E7] shadow-xs flex items-center gap-3 max-w-sm">
+                                <div className="w-10 h-10 rounded-xl bg-[#EAFBF2] text-[#1E7E49] flex items-center justify-center shrink-0">
+                                  <FileText className="w-5 h-5 text-[#45D483]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-[#252B28] truncate">{msg.content}</p>
+                                  <p className="text-[10px] text-[#AEB7B3]">Arquivo Anexado</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => alert(`Iniciando download seguro de: ${msg.content}`)}
+                                  className="w-8 h-8 rounded-full bg-[#F1F3F2] hover:bg-[#E5E9E7] text-[#252B28] flex items-center justify-center transition-colors shrink-0"
+                                  title="Baixar Arquivo"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             )}
                           </div>
 
-                          <span className="text-xs font-mono font-bold text-[#45D483] shrink-0">
-                            {isAudioPlaying && audioCurrentTime > 0
-                              ? `${Math.floor(audioCurrentTime / 60)}:${Math.floor(audioCurrentTime % 60)
-                                  .toString()
-                                  .padStart(2, '0')}`
-                              : msg.content.includes('"')
-                              ? msg.content.replace('Mensagem de voz ', '')
-                              : '0:12'}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Tipo: DOCUMENTO / ARQUIVO */}
-                      {msg.messageType === 'document' && (
-                        <div className="bg-white p-3 rounded-2xl border border-[#E5E9E7] shadow-xs flex items-center gap-3 max-w-sm">
-                          <div className="w-10 h-10 rounded-xl bg-[#EAFBF2] text-[#1E7E49] flex items-center justify-center shrink-0">
-                            <FileText className="w-5 h-5 text-[#45D483]" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-[#252B28] truncate">{msg.content}</p>
-                            <p className="text-[10px] text-[#AEB7B3]">Arquivo Anexado</p>
-                          </div>
+                          {/* Botão minimalista de 3 pontinhos */}
                           <button
-                            onClick={() => alert(`Iniciando download seguro de: ${msg.content}`)}
-                            className="w-8 h-8 rounded-full bg-[#F1F3F2] hover:bg-[#E5E9E7] text-[#252B28] flex items-center justify-center transition-colors shrink-0"
-                            title="Baixar Arquivo"
+                            type="button"
+                            onClick={(e) => handleDotsClick(e, msg)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white hover:bg-[#F1F3F2] dark:hover:bg-[#252B28] transition-all self-center shrink-0 shadow-xs"
+                            title="Opções (Fixar, Arquivar, Excluir)"
                           >
-                            <Download className="w-3.5 h-3.5" />
+                            <MoreHorizontal className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      )}
 
-                      {/* Confirmação de Leitura para mensagens do Agente */}
-                      {isAgent && (
-                        <div className="flex items-center justify-end gap-1 text-[10px] text-[#AEB7B3]">
-                          <span>Entregue</span>
-                          <CheckCheck className="w-3 h-3 text-[#45D483]" />
-                        </div>
-                      )}
+                        {/* Confirmação de Leitura para mensagens do Agente */}
+                        {isAgent && (
+                          <div className="flex items-center justify-end gap-1 text-[10px] text-[#AEB7B3]">
+                            <span>Entregue</span>
+                            <CheckCheck className="w-3 h-3 text-[#45D483]" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
               {/* Indicador de Digitação da IA */}
               {isTyping && (
@@ -1162,6 +1395,70 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ===================================================================
+          MENU DE CONTEXTO MINIMALISTA (FIXAR, ARQUIVAR, EXCLUIR)
+          =================================================================== */}
+      {contextMenu.isOpen && contextMenu.message && (
+        <div
+          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+          className="fixed z-50 bg-white dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2C3530] rounded-2xl shadow-xl shadow-black/10 py-1.5 w-48 animate-in fade-in zoom-in-95 duration-100 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Opção Fixar / Desafixar */}
+          <button
+            type="button"
+            onClick={() => handleTogglePin(contextMenu.message!)}
+            className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-[#252B28] dark:text-gray-200 hover:bg-[#F1F3F2] dark:hover:bg-[#262E2A] transition-colors text-left"
+          >
+            <span className="flex items-center gap-2.5">
+              {contextMenu.message.isPinned ? (
+                <PinOff className="w-4 h-4 text-[#AEB7B3]" />
+              ) : (
+                <Pin className="w-4 h-4 text-[#45D483]" />
+              )}
+              <span>{contextMenu.message.isPinned ? 'Desafixar do topo' : 'Fixar no topo'}</span>
+            </span>
+            {!contextMenu.message.isPinned && (
+              <span className="text-[10px] text-[#AEB7B3] font-mono">
+                {pinnedMessages.length}/5
+              </span>
+            )}
+          </button>
+
+          {/* Opção Arquivar / Desarquivar */}
+          <button
+            type="button"
+            onClick={() => handleToggleArchive(contextMenu.message!)}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-[#252B28] dark:text-gray-200 hover:bg-[#F1F3F2] dark:hover:bg-[#262E2A] transition-colors text-left"
+          >
+            <Archive className="w-4 h-4 text-[#6C7671]" />
+            <span>{contextMenu.message.isArchived ? 'Desarquivar' : 'Arquivar'}</span>
+          </button>
+
+          <div className="h-[1px] bg-[#E5E9E7] dark:bg-[#2C3530] my-1" />
+
+          {/* Opção Excluir */}
+          <button
+            type="button"
+            onClick={() => handleDelete(contextMenu.message!)}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left"
+          >
+            <Trash2 className="w-4 h-4 text-rose-500" />
+            <span>Excluir</span>
+          </button>
+        </div>
+      )}
+
+      {/* ===================================================================
+          TOAST DE ALERTA: LIMITE DE FIXAÇÃO
+          =================================================================== */}
+      {pinToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#252B28] text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-top-3">
+          <span className="w-2 h-2 rounded-full bg-[#45D483]" />
+          <span>{pinToast}</span>
         </div>
       )}
     </div>

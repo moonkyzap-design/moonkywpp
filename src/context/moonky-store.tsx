@@ -89,6 +89,10 @@ interface MoonkyStoreContextType {
   addKnowledgeItem: (item: Omit<AIKnowledgeItem, 'id' | 'updatedAt'>) => void;
   updateAISettings: (settings: Partial<AIAgentSettings>) => void;
   updateChannel: (channelId: string, channel: Partial<Channel>) => void;
+  pinMessage: (convId: string, messageId: string) => boolean;
+  unpinMessage: (convId: string, messageId: string) => void;
+  archiveMessage: (convId: string, messageId: string) => void;
+  deleteMessage: (convId: string, messageId: string) => void;
 }
 
 const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
@@ -175,24 +179,40 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
-  // Filter conversations
-  const filteredConversations = conversations.filter((conv) => {
-    if (filterChannel !== 'all' && conv.channelType !== filterChannel) return false;
-    if (filterStatus !== 'all' && conv.status !== filterStatus) return false;
-    if (filterAgent === 'mine' && conv.assignedAgent?.id !== currentUser.id) return false;
-    if (filterAgent === 'unassigned' && conv.assignedAgent !== null) return false;
-    if (filterTag && !conv.contact.tags.some((t) => t.name.toLowerCase() === filterTag.toLowerCase())) {
-      return false;
+  // Helper to extract timestamp for ordering conversations by latest activity
+  const getConversationTimeValue = (conv: Conversation): number => {
+    if (conv.lastMessageTimestamp) return conv.lastMessageTimestamp;
+    if (conv.lastMessageAt) {
+      const parts = conv.lastMessageAt.split(':');
+      if (parts.length === 2) {
+        const d = new Date();
+        d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+        return d.getTime();
+      }
     }
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase();
-      const matchName = conv.contact.name.toLowerCase().includes(q);
-      const matchPhone = conv.contact.phone?.toLowerCase().includes(q);
-      const matchSnippet = conv.lastMessageSnippet.toLowerCase().includes(q);
-      if (!matchName && !matchPhone && !matchSnippet) return false;
-    }
-    return true;
-  });
+    return 0;
+  };
+
+  // Filter and strictly sort conversations by latest message sent or received (most recent at top)
+  const filteredConversations = conversations
+    .filter((conv) => {
+      if (filterChannel !== 'all' && conv.channelType !== filterChannel) return false;
+      if (filterStatus !== 'all' && conv.status !== filterStatus) return false;
+      if (filterAgent === 'mine' && conv.assignedAgent?.id !== currentUser.id) return false;
+      if (filterAgent === 'unassigned' && conv.assignedAgent !== null) return false;
+      if (filterTag && !conv.contact.tags.some((t) => t.name.toLowerCase() === filterTag.toLowerCase())) {
+        return false;
+      }
+      if (searchQuery.trim().length > 0) {
+        const q = searchQuery.toLowerCase();
+        const matchName = conv.contact.name.toLowerCase().includes(q);
+        const matchPhone = conv.contact.phone?.toLowerCase().includes(q);
+        const matchSnippet = conv.lastMessageSnippet.toLowerCase().includes(q);
+        if (!matchName && !matchPhone && !matchSnippet) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => getConversationTimeValue(b) - getConversationTimeValue(a));
 
   /**
    * Send agent message and optionally trigger server-side WAME dispatch
@@ -206,8 +226,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     if (type === 'text' && !content.trim()) return;
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const now = Date.now();
     const newMsg: Message = {
-      id: `msg-agent-${Date.now()}`,
+      id: `msg-agent-${now}`,
       conversationId: activeConversationId,
       senderType: 'agent',
       senderId: currentUser.id,
@@ -242,24 +263,25 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         ? `📄 ${content}`
         : content.trim();
 
-    // Update conversation snippet and time
+    // Reorder conversation to the top with updated snippet and timestamp
     setConversations((prev) => {
-      const updated = prev.map((c) =>
-        c.id === activeConversationId
-          ? {
-              ...c,
-              lastMessageSnippet: snippet,
-              lastMessageAt: timeStr,
-              unreadCount: 0
-            }
-          : c
-      );
+      const target = prev.find((c) => c.id === activeConversationId);
+      if (!target) return prev;
+      const updatedTarget: Conversation = {
+        ...target,
+        lastMessageSnippet: snippet,
+        lastMessageAt: timeStr,
+        lastMessageTimestamp: now,
+        unreadCount: 0
+      };
+      const rest = prev.filter((c) => c.id !== activeConversationId);
+      const reordered = [updatedTarget, ...rest];
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(reordered));
         } catch {}
       }
-      return updated;
+      return reordered;
     });
 
     // 1. Salvar no Banco de Dados Real (Supabase)
@@ -329,25 +351,26 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       return updated;
     });
 
+    const now = Date.now();
     const targetConv = conversations.find((c) => c.id === convId);
-
     setConversations((prev) => {
-      const updated = prev.map((c) =>
-        c.id === convId
-          ? {
-              ...c,
-              lastMessageSnippet: text,
-              lastMessageAt: timeStr,
-              unreadCount: c.id === activeConversationId ? 0 : c.unreadCount + 1
-            }
-          : c
-      );
+      const target = prev.find((c) => c.id === convId);
+      if (!target) return prev;
+      const updatedTarget: Conversation = {
+        ...target,
+        lastMessageSnippet: text,
+        lastMessageAt: timeStr,
+        lastMessageTimestamp: now,
+        unreadCount: convId === activeConversationId ? 0 : target.unreadCount + 1
+      };
+      const rest = prev.filter((c) => c.id !== convId);
+      const reordered = [updatedTarget, ...rest];
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(reordered));
         } catch {}
       }
-      return updated;
+      return reordered;
     });
 
     // Evaluate AI rules:
@@ -373,15 +396,17 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
       setIsTyping(false);
 
+      const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const aiNow = Date.now();
       const aiMsg: Message = {
-        id: `msg-ai-${Date.now()}`,
+        id: `msg-ai-${aiNow}`,
         conversationId: convId,
         senderType: 'ai',
         senderName: aiSettings.name,
         content: aiResponse.replyText,
         messageType: 'text',
         deliveryStatus: 'delivered',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: aiTime,
         aiMetadata: {
           confidence: aiResponse.confidenceScore,
           tokens: aiResponse.tokensUsed.total,
@@ -403,24 +428,25 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       });
 
       setConversations((prev) => {
-        const updated = prev.map((c) =>
-          c.id === convId
-            ? {
-                ...c,
-                lastMessageSnippet: aiResponse.replyText,
-                lastMessageAt: aiMsg.timestamp,
-                // If handoff was triggered, automatically transition AI status to handed_off and assign agent!
-                aiStatus: aiResponse.isHandoffRequired ? 'handed_off' : c.aiStatus,
-                assignedAgent: aiResponse.isHandoffRequired ? currentUser : c.assignedAgent
-              }
-            : c
-        );
+        const target = prev.find((c) => c.id === convId);
+        if (!target) return prev;
+        const updatedTarget: Conversation = {
+          ...target,
+          lastMessageSnippet: aiResponse.replyText,
+          lastMessageAt: aiTime,
+          lastMessageTimestamp: aiNow,
+          // If handoff was triggered, automatically transition AI status to handed_off and assign agent!
+          aiStatus: aiResponse.isHandoffRequired ? 'handed_off' : target.aiStatus,
+          assignedAgent: aiResponse.isHandoffRequired ? currentUser : target.assignedAgent
+        };
+        const rest = prev.filter((c) => c.id !== convId);
+        const reordered = [updatedTarget, ...rest];
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+            localStorage.setItem('moonky_conversations_v4', JSON.stringify(reordered));
           } catch {}
         }
-        return updated;
+        return reordered;
       });
 
       // If handoff required, append automated system note
@@ -545,6 +571,99 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     setChannels((prev) => prev.map((ch) => (ch.id === channelId ? { ...ch, ...updated } : ch)));
   };
 
+  /**
+   * Fixar mensagem no topo da conversa (limite máximo de 5 mensagens)
+   */
+  const pinMessage = (convId: string, messageId: string): boolean => {
+    const list = messages[convId] || [];
+    const currentlyPinned = list.filter((m) => m.isPinned && !m.isArchived);
+    if (currentlyPinned.length >= 5) {
+      return false; // Limite de 5 atingido
+    }
+    const updatedList = list.map((m) =>
+      m.id === messageId
+        ? {
+            ...m,
+            isPinned: true,
+            pinnedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        : m
+    );
+    const updated = { ...messages, [convId]: updatedList };
+    setMessages(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+      } catch {}
+    }
+    return true;
+  };
+
+  /**
+   * Desafixar mensagem do topo
+   */
+  const unpinMessage = (convId: string, messageId: string) => {
+    const list = messages[convId] || [];
+    const updatedList = list.map((m) =>
+      m.id === messageId ? { ...m, isPinned: false, pinnedAt: undefined } : m
+    );
+    const updated = { ...messages, [convId]: updatedList };
+    setMessages(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  /**
+   * Arquivar / Desarquivar mensagem
+   */
+  const archiveMessage = (convId: string, messageId: string) => {
+    const list = messages[convId] || [];
+    const updatedList = list.map((m) =>
+      m.id === messageId ? { ...m, isArchived: !m.isArchived, isPinned: false } : m
+    );
+    const updated = { ...messages, [convId]: updatedList };
+    setMessages(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  /**
+   * Excluir mensagem do histórico e atualizar prévia se necessário
+   */
+  const deleteMessage = (convId: string, messageId: string) => {
+    const list = messages[convId] || [];
+    const updatedList = list.filter((m) => m.id !== messageId);
+    const updated = { ...messages, [convId]: updatedList };
+    setMessages(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+      } catch {}
+    }
+    if (updatedList.length > 0) {
+      const lastMsg = updatedList[updatedList.length - 1];
+      const snippet =
+        lastMsg.messageType === 'image'
+          ? '📷 Foto'
+          : lastMsg.messageType === 'audio'
+          ? '🎙 Mensagem de voz'
+          : lastMsg.messageType === 'document'
+          ? `📄 ${lastMsg.content}`
+          : lastMsg.content;
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convId ? { ...c, lastMessageSnippet: snippet, lastMessageAt: lastMsg.timestamp } : c
+        )
+      );
+    }
+  };
+
   return (
     <MoonkyStoreContext.Provider
       value={{
@@ -591,7 +710,11 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         updateKnowledgeItem,
         addKnowledgeItem,
         updateAISettings,
-        updateChannel
+        updateChannel,
+        pinMessage,
+        unpinMessage,
+        archiveMessage,
+        deleteMessage
       }}
     >
       {children}

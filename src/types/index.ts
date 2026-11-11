@@ -81,6 +81,7 @@ export interface Conversation {
   unreadCount: number;
   lastMessageSnippet: string;
   lastMessageAt: string;
+  lastMessageTimestamp?: number;
   isStarred?: boolean;
 }
 
@@ -99,6 +100,9 @@ export interface Message {
   mediaUrl?: string;
   deliveryStatus: MessageDeliveryStatus;
   timestamp: string;
+  isPinned?: boolean;
+  pinnedAt?: string;
+  isArchived?: boolean;
   aiMetadata?: {
     confidence?: number;
     tokens?: number;
