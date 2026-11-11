@@ -15,7 +15,11 @@ export class WameClient {
   }
 
   public isConfigured(): boolean {
-    return Boolean(this.instanceKey && this.instanceKey.trim().length > 0);
+    return Boolean(this.instanceKey && this.instanceKey.trim().length > 0 && !this.instanceKey.includes('INSTANCE_8941'));
+  }
+
+  public getKey(): string {
+    return this.instanceKey;
   }
 
   /**
@@ -23,10 +27,10 @@ export class WameClient {
    * Endpoint: GET https://server.wame.api.br/{KEY}/instance
    */
   async getInstanceStatus(): Promise<WameInstanceStatus | { configured: false; message: string }> {
-    if (!this.isConfigured()) {
+    if (!this.instanceKey) {
       return {
         configured: false,
-        message: 'WAME Instance Key not configured in environment or channel settings. Please provide a valid instance key.'
+        message: 'WAME Instance Key not configured in environment or channel settings.'
       };
     }
 
@@ -36,7 +40,6 @@ export class WameClient {
         headers: {
           'Accept': 'application/json'
         },
-        // Avoid stale cache for connection status
         cache: 'no-store'
       });
 
@@ -53,11 +56,78 @@ export class WameClient {
   }
 
   /**
+   * Connect instance / retrieve QR Code
+   * Endpoint: POST https://server.wame.api.br/{KEY}/instance
+   */
+  async connectInstance(): Promise<WameApiResponse<{ qrcode?: string; status: string }>> {
+    if (!this.instanceKey) {
+      throw new Error('Instance Key is required to connect.');
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.instanceKey}/instance`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        cache: 'no-store'
+      });
+
+      const data = await response.json();
+      return {
+        status: response.status,
+        data: {
+          qrcode: data.data?.qrcode || data.qrcode,
+          status: data.data?.status || data.status || 'connecting'
+        }
+      };
+    } catch (err: unknown) {
+      return {
+        status: 500,
+        error: 'CONNECT_ERROR',
+        message: err instanceof Error ? err.message : 'Connection failed'
+      };
+    }
+  }
+
+  /**
+   * Disconnect / Logout from WhatsApp session
+   * Endpoint: POST https://server.wame.api.br/{KEY}/instance/logout
+   */
+  async logoutInstance(): Promise<WameApiResponse> {
+    if (!this.instanceKey) {
+      throw new Error('Instance Key is required to logout.');
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.instanceKey}/instance/logout`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      return {
+        status: response.status,
+        message: data.message || 'Desconectado com sucesso da sessão WhatsApp.'
+      };
+    } catch (err: unknown) {
+      return {
+        status: 500,
+        error: 'LOGOUT_ERROR',
+        message: err instanceof Error ? err.message : 'Logout failed'
+      };
+    }
+  }
+
+  /**
    * Configure Webhook URL on the WAME instance
    * Endpoint: PUT https://server.wame.api.br/{KEY}/instance
    */
   async setWebhook(webhookUrl: string): Promise<WameApiResponse> {
-    if (!this.isConfigured()) {
+    if (!this.instanceKey) {
       throw new Error('WAME Instance Key is required to configure webhook.');
     }
 
@@ -85,7 +155,7 @@ export class WameClient {
    * Endpoint: POST https://server.wame.api.br/{KEY}/message/text
    */
   async sendTextMessage(to: string, text: string): Promise<WameApiResponse<{ messageId: string }>> {
-    if (!this.isConfigured()) {
+    if (!this.instanceKey) {
       return {
         status: 400,
         error: 'WAME_UNCONFIGURED',
@@ -93,7 +163,6 @@ export class WameClient {
       };
     }
 
-    // Clean recipient number: remove non-digits for WhatsApp
     const sanitizedTo = to.replace(/[^\d+]/g, '');
 
     const payload: WameSendTextRequest = {
@@ -142,7 +211,7 @@ export class WameClient {
    * Endpoint: POST https://server.wame.api.br/{KEY}/message/media
    */
   async sendMediaMessage(req: WameSendMediaRequest): Promise<WameApiResponse> {
-    if (!this.isConfigured()) {
+    if (!this.instanceKey) {
       return {
         status: 400,
         error: 'WAME_UNCONFIGURED',

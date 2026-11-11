@@ -34,9 +34,10 @@ export type NavigationTab =
 interface SidebarProps {
   currentTab: NavigationTab;
   onSelectTab: (tab: NavigationTab) => void;
+  onOpenConnectModal?: () => void;
 }
 
-export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
+export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: SidebarProps) {
   const { conversations } = useMoonky();
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -149,10 +150,10 @@ export function Sidebar({ currentTab, onSelectTab }: SidebarProps) {
           </button>
         </div>
 
-        {/* User Profile Avatar with Online Ring */}
+        {/* User Profile Avatar with Online Ring — Opens WhatsApp QR Code & Instagram Connection */}
         <button
-          onClick={() => onSelectTab('settings')}
-          title={`${currentUser.fullName} (${currentUser.role})`}
+          onClick={onOpenConnectModal || (() => onSelectTab('settings'))}
+          title="Conectar WhatsApp QR Code / Instagram Oficial (WAME)"
           className="relative group focus:outline-none"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

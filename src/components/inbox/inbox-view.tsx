@@ -33,7 +33,11 @@ import {
 import { useMoonky } from '@/context/moonky-store';
 import { currentUser } from '@/lib/mock-data';
 
-export function InboxView() {
+interface InboxViewProps {
+  onOpenConnectModal?: () => void;
+}
+
+export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const {
     conversations,
     activeConversationId,
@@ -247,15 +251,11 @@ export function InboxView() {
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-[#252B28]">Calls</span>
               <button
-                onClick={() =>
-                  simulateCustomerIncomingMessage(
-                    activeConversationId || 'conv-hanaya-01',
-                    'Qual o status do meu rastreamento LNC-9988776655?'
-                  )
-                }
+                onClick={onOpenConnectModal || (() => {})}
                 className="text-[11px] font-bold text-[#45D483] hover:text-[#38b76e] flex items-center gap-1 transition-colors"
+                title="Conectar WhatsApp QR Code / Instagram"
               >
-                <Plus className="w-3 h-3" /> New meet
+                <Plus className="w-3 h-3" /> Conectar Canal
               </button>
             </div>
 
