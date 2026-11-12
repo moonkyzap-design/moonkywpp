@@ -116,7 +116,7 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 select-none animate-in fade-in duration-200">
-      <div className="bg-white rounded-[32px] w-full max-w-2xl border border-[#E5E9E7] shadow-2xl overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-[#151917] rounded-[32px] w-full max-w-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-[#F1F3F2] flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -140,13 +140,13 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
 
         {/* Tab Switcher */}
         <div className="p-6 pb-2">
-          <div className="flex items-center gap-2 p-1 bg-[#F1F3F2] rounded-full text-xs font-semibold">
+          <div className="flex items-center gap-2 p-1 bg-[#F1F3F2] dark:bg-[#1D2320] rounded-full text-xs font-semibold">
             <button
               onClick={() => setActiveTab('whatsapp')}
               className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-2 transition-all ${
                 activeTab === 'whatsapp'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-[#25D366]"></span>
@@ -162,8 +162,8 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
               onClick={() => setActiveTab('instagram')}
               className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-2 transition-all ${
                 activeTab === 'instagram'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600"></span>
@@ -179,8 +179,8 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
               onClick={() => setActiveTab('credentials')}
               className={`py-2 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'credentials'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <Key className="w-3.5 h-3.5" />
@@ -325,7 +325,7 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
         {/* Tab 2: Instagram Direct Oficial (Meta) */}
         {activeTab === 'instagram' && (
           <div className="p-6 space-y-6">
-            <div className="p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 rounded-2xl border border-pink-100 flex items-start gap-3">
+            <div className="p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/30 dark:via-pink-950/30 dark:to-amber-950/30 rounded-2xl border border-pink-100 dark:border-pink-900/40 flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 text-white flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-4 h-4" />
               </div>

@@ -289,13 +289,13 @@ Diretrizes Obrigatórias para a IA:
           </div>
 
           {/* Abas Superiores de Navegação */}
-          <div className="flex items-center p-1 bg-[#F1F3F2] rounded-xl self-start">
+          <div className="flex items-center p-1 bg-[#F1F3F2] dark:bg-[#1D2320] rounded-xl self-start">
             <button
               onClick={() => setActiveTab('ai')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'ai'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <Bot className="w-3.5 h-3.5 text-[#45D483]" />
@@ -305,8 +305,8 @@ Diretrizes Obrigatórias para a IA:
               onClick={() => setActiveTab('memory')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'memory'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <Brain className="w-3.5 h-3.5 text-[#45D483]" />
@@ -316,8 +316,8 @@ Diretrizes Obrigatórias para a IA:
               onClick={() => setActiveTab('rules')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'rules'
-                  ? 'bg-white text-[#252B28] shadow-xs'
-                  : 'text-[#6C7671] hover:text-[#252B28]'
+                  ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                  : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               <Zap className="w-3.5 h-3.5 text-[#45D483]" />
@@ -332,7 +332,7 @@ Diretrizes Obrigatórias para a IA:
         {activeTab === 'ai' && (
           <div className="space-y-6">
             {/* Escolha do Provedor de IA */}
-            <div className="bg-white rounded-2xl border border-[#E5E9E7] p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-5 sm:p-6 shadow-xs space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-[#45D483]" />
@@ -352,8 +352,8 @@ Diretrizes Obrigatórias para a IA:
                       onClick={() => handleSelectProvider(p.id)}
                       className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all relative flex flex-col justify-between ${
                         isSelected
-                          ? 'border-[#45D483] bg-gradient-to-b from-[#FFFFFF] to-[#EAFBF2]/30 shadow-xs ring-1 ring-[#45D483]'
-                          : 'border-[#E5E9E7] bg-white hover:border-[#AEB7B3]'
+                          ? 'border-[#45D483] bg-gradient-to-b from-[#FFFFFF] to-[#EAFBF2]/30 dark:from-[#1D2320] dark:to-[#17261F] dark:border-[#45D483] shadow-xs ring-1 ring-[#45D483]'
+                          : 'border-[#E5E9E7] dark:border-[#262E2A] bg-white dark:bg-[#151917] hover:border-[#AEB7B3]'
                       }`}
                     >
                       <div>
@@ -395,7 +395,7 @@ Diretrizes Obrigatórias para a IA:
             </div>
 
             {/* Configuração de Chave de API & Modelo */}
-            <div className="bg-white rounded-2xl border border-[#E5E9E7] p-5 sm:p-6 shadow-xs space-y-6">
+            <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-5 sm:p-6 shadow-xs space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F1F3F2] pb-4">
                 <div>
                   <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
@@ -647,7 +647,7 @@ Diretrizes Obrigatórias para a IA:
         {/* ============================================================== */}
         {activeTab === 'memory' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-[#E5E9E7] p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-5 sm:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F1F3F2] pb-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -774,8 +774,8 @@ Diretrizes Obrigatórias para a IA:
               {automations.map((auto) => (
                 <div
                   key={auto.id}
-                  className={`bg-white rounded-2xl border p-5 shadow-xs transition-all ${
-                    auto.isActive ? 'border-[#E5E9E7]' : 'border-[#E5E9E7] opacity-60'
+                  className={`bg-white dark:bg-[#151917] rounded-2xl border p-5 shadow-xs transition-all ${
+                    auto.isActive ? 'border-[#E5E9E7] dark:border-[#262E2A]' : 'border-[#E5E9E7] dark:border-[#262E2A] opacity-60'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -826,7 +826,7 @@ Diretrizes Obrigatórias para a IA:
         {/* Modal de Criar Automação */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 border border-[#E5E9E7]">
+            <div className="bg-white dark:bg-[#151917] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 border border-[#E5E9E7] dark:border-[#262E2A]">
               <div className="flex items-center justify-between border-b border-[#F1F3F2] pb-3">
                 <h3 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
                   <Zap className="w-4 h-4 text-[#45D483]" />

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #F1F3F2;
   --foreground: #252B28;
@@ -64,8 +66,27 @@ html.dark body {
 }
 
 /* 1. MUDANÇA RADICAL: TUDO QUE É BRANCO FICA ESCURO */
-html.dark .bg-white {
+html.dark .bg-white,
+html.dark [class*="bg-white"]:not(.qr-scan-card):not(.qr-scan-card *) {
   background-color: #151917 !important;
+}
+
+/* Neutraliza e inverte todos os gradientes com início ou fim branco */
+html.dark [class*="from-[#FFFFFF]"]:not(.qr-scan-card),
+html.dark [class*="from-white"]:not(.qr-scan-card) {
+  --tw-gradient-from: #1D2320 !important;
+  --tw-gradient-stops: #1D2320, #17261F !important;
+  background-image: linear-gradient(to bottom, #1D2320, #17261F) !important;
+  background-color: #1D2320 !important;
+}
+
+html.dark [class*="to-[#EAFBF2]"] {
+  --tw-gradient-to: #17261F !important;
+}
+
+html.dark [class*="from-purple-50"] {
+  background-image: none !important;
+  background-color: #1A1822 !important;
 }
 
 /* 2. SUPERFÍCIES EXTERNAS E SECUNDÁRIAS */

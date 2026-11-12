@@ -78,7 +78,7 @@ export function TeamView() {
       </div>
 
       {/* Tabela de Membros */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs overflow-hidden">
         <div className="p-5 border-b border-[#F1F3F2] flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-[#252B28]">Membros Ativos da Equipe</h2>
@@ -155,7 +155,7 @@ export function TeamView() {
       </div>
 
       {/* Matriz RBAC */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
         <div>
           <h2 className="text-sm font-bold text-[#252B28]">Matriz de Controle de Acesso por Função (RBAC)</h2>
           <p className="text-xs text-[#AEB7B3] mt-0.5">
@@ -216,7 +216,7 @@ export function TeamView() {
       {/* Modal: Convidar Membro */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7]">
+          <div className="bg-white dark:bg-[#151917] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7] dark:border-[#262E2A]">
             <h3 className="text-base font-bold text-[#252B28]">Convidar Novo Membro da Equipe</h3>
             <form onSubmit={handleInvite} className="space-y-3 text-xs">
               <div>

@@ -102,7 +102,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
       </div>
 
       {/* Barra de Filtro e Pesquisa */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="relative w-full sm:w-80">
           <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#AEB7B3]" />
           <input
@@ -110,7 +110,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
             placeholder="Buscar por nome, telefone, e-mail ou @instagram..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
+            className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2A342E] rounded-xl pl-9 pr-3 py-1.5 text-xs text-[#252B28] dark:text-[#F3F6F4] focus:outline-none focus:border-[#45D483]"
           />
         </div>
 
@@ -123,7 +123,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all shrink-0 ${
                 selectedStatus === status
                   ? 'bg-[#252B28] text-white shadow-xs'
-                  : 'bg-[#F7F9F8] text-[#6C7671] hover:text-[#252B28]'
+                  : 'bg-[#F7F9F8] dark:bg-[#1D2320] text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
               {statusLabels[status] || status}
@@ -133,10 +133,10 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
       </div>
 
       {/* Tabela de Contatos */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#F7F9F8] border-b border-[#E5E9E7] text-[#AEB7B3] uppercase text-[10px] font-bold tracking-wider">
+            <thead className="bg-[#F7F9F8] dark:bg-[#1A201D] border-b border-[#E5E9E7] dark:border-[#262E2A] text-[#AEB7B3] uppercase text-[10px] font-bold tracking-wider">
               <tr>
                 <th className="py-3 px-6">Nome do Contato</th>
                 <th className="py-3 px-6">Telefone / WhatsApp</th>
@@ -224,7 +224,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
       {/* Modal: Adicionar Novo Contato */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7]">
+          <div className="bg-white dark:bg-[#151917] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7] dark:border-[#262E2A]">
             <h3 className="text-base font-bold text-[#252B28]">Adicionar Novo Contato</h3>
             <form onSubmit={handleCreateContact} className="space-y-3 text-xs">
               <div>

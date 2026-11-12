@@ -58,7 +58,7 @@ export function AnalyticsView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-white border border-[#E5E9E7] p-1.5 rounded-xl text-xs font-semibold text-[#252B28]">
+        <div className="flex items-center gap-2 bg-white dark:bg-[#151917] border border-[#E5E9E7] dark:border-[#262E2A] p-1.5 rounded-xl text-xs font-semibold text-[#252B28] dark:text-[#F3F6F4]">
           <Calendar className="w-3.5 h-3.5 text-[#AEB7B3]" />
           <span>Últimos 7 Dias (Junho 2026)</span>
         </div>
@@ -66,38 +66,38 @@ export function AnalyticsView() {
 
       {/* Cartões KPI */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 bg-white rounded-2xl border border-[#E5E9E7] shadow-xs">
+        <div className="p-5 bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs">
           <span className="text-[10px] font-bold uppercase text-[#AEB7B3] tracking-wider">
             Total de Conversas
           </span>
-          <p className="text-2xl font-bold text-[#252B28] mt-2">{analytics.totalConversations}</p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">+14,2% vs período anterior</p>
+          <p className="text-2xl font-bold text-[#252B28] dark:text-[#F3F6F4] mt-2">{analytics.totalConversations}</p>
+          <p className="text-[11px] text-emerald-600 dark:text-[#45D483] font-semibold mt-1">+14,2% vs período anterior</p>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-[#E5E9E7] shadow-xs">
+        <div className="p-5 bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs">
           <span className="text-[10px] font-bold uppercase text-[#AEB7B3] tracking-wider">
             Taxa de Resolução
           </span>
-          <p className="text-2xl font-bold text-[#252B28] mt-2">
+          <p className="text-2xl font-bold text-[#252B28] dark:text-[#F3F6F4] mt-2">
             {analytics.resolutionRatePercentage}%
           </p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">SLA padrão de excelência</p>
+          <p className="text-[11px] text-emerald-600 dark:text-[#45D483] font-semibold mt-1">SLA padrão de excelência</p>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-[#E5E9E7] shadow-xs">
+        <div className="p-5 bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs">
           <span className="text-[10px] font-bold uppercase text-[#AEB7B3] tracking-wider">
             Tempo Médio de 1ª Resposta
           </span>
-          <p className="text-2xl font-bold text-[#252B28] mt-2">{analytics.avgResponseTimeMin}m</p>
-          <p className="text-[11px] text-[#6C7671] mt-1">Resposta instantânea da IA em &lt; 3s</p>
+          <p className="text-2xl font-bold text-[#252B28] dark:text-[#F3F6F4] mt-2">{analytics.avgResponseTimeMin}m</p>
+          <p className="text-[11px] text-[#6C7671] dark:text-[#AEB7B3] mt-1">Resposta instantânea da IA em &lt; 3s</p>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-emerald-200 bg-gradient-to-b from-white to-[#EAFBF2] shadow-xs">
-          <span className="text-[10px] font-bold uppercase text-[#1E7E49] tracking-wider flex items-center gap-1">
+        <div className="p-5 bg-white dark:bg-[#151917] rounded-2xl border border-emerald-200 dark:border-emerald-800/40 bg-gradient-to-b from-white to-[#EAFBF2] dark:from-[#1D2320] dark:to-[#17261F] shadow-xs">
+          <span className="text-[10px] font-bold uppercase text-[#1E7E49] dark:text-[#45D483] tracking-wider flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-[#45D483]" /> Taxa no Piloto Automático
           </span>
-          <p className="text-2xl font-bold text-[#252B28] mt-2">{analytics.aiHandledPercentage}%</p>
-          <p className="text-[11px] text-[#1E7E49] font-medium mt-1">Resolvidas sem intervenção humana</p>
+          <p className="text-2xl font-bold text-[#252B28] dark:text-[#F3F6F4] mt-2">{analytics.aiHandledPercentage}%</p>
+          <p className="text-[11px] text-[#1E7E49] dark:text-[#45D483] font-medium mt-1">Resolvidas sem intervenção humana</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export function AnalyticsView() {
         </div>
 
         {/* Divisão IA vs Humano */}
-        <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
           <h2 className="text-sm font-bold text-[#252B28]">Divisão de Atendimentos: IA vs Humano</h2>
           <p className="text-xs text-[#AEB7B3]">
             Proporção de tickets solucionados integralmente pela IA versus escalados para a equipe.
@@ -197,7 +197,7 @@ export function AnalyticsView() {
       </div>
 
       {/* Classificação de Desempenho dos Atendentes */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
         <h2 className="text-sm font-bold text-[#252B28]">Desempenho da Equipe de Atendimento</h2>
 
         <div className="divide-y divide-[#F1F3F2]">

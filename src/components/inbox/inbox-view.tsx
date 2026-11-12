@@ -527,7 +527,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden min-w-0 bg-white">
+    <div className="flex-1 flex overflow-hidden min-w-0 bg-white dark:bg-[#151917]">
       {/* Uploads Ocultos */}
       <input
         type="file"
@@ -547,7 +547,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       {/* ===================================================================
           COLUNA 1: LISTA DE CONVERSAS (Somente Mensagens / Conversas)
           =================================================================== */}
-      <div className="w-[300px] md:w-[320px] bg-white border-r border-[#E5E9E7]/80 flex flex-col justify-between shrink-0 select-none">
+      <div className="w-[300px] md:w-[320px] bg-white dark:bg-[#151917] border-r border-[#E5E9E7]/80 dark:border-[#262E2A] flex flex-col justify-between shrink-0 select-none">
         <div className="flex-1 flex flex-col min-h-0">
           {/* Campo de Busca em Pílula */}
           <div className="p-4 pb-2">
@@ -557,7 +557,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 placeholder="Buscar conversas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#F1F3F2] text-xs text-[#252B28] placeholder-[#AEB7B3] rounded-full pl-4 pr-11 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#45D483] transition-all"
+                className="w-full bg-[#F1F3F2] dark:bg-[#1D2320] text-xs text-[#252B28] dark:text-[#F3F6F4] placeholder-[#AEB7B3] rounded-full pl-4 pr-11 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#45D483] transition-all"
               />
               <button className="absolute right-1.5 w-7 h-7 rounded-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] flex items-center justify-center transition-all shadow-xs">
                 <Search className="w-3.5 h-3.5 text-[#252B28]" />
@@ -567,13 +567,13 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
           {/* Abas Pílula: Todas, WhatsApp, Instagram */}
           <div className="px-4 py-2">
-            <div className="flex items-center gap-1 p-1 bg-[#F1F3F2] rounded-full text-xs">
+            <div className="flex items-center gap-1 p-1 bg-[#F1F3F2] dark:bg-[#1D2320] rounded-full text-xs">
               <button
                 onClick={() => setActiveSegment('all')}
                 className={`flex-1 py-1 px-2.5 rounded-full text-[11px] font-semibold transition-all ${
                   activeSegment === 'all'
-                    ? 'bg-white text-[#252B28] shadow-xs'
-                    : 'text-[#6C7671] hover:text-[#252B28]'
+                    ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                    : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
                 }`}
               >
                 Todas
@@ -582,8 +582,8 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 onClick={() => setActiveSegment('whatsapp')}
                 className={`flex-1 py-1 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1 ${
                   activeSegment === 'whatsapp'
-                    ? 'bg-white text-[#1E7E49] shadow-xs'
-                    : 'text-[#6C7671] hover:text-[#252B28]'
+                    ? 'bg-white dark:bg-[#151917] text-[#1E7E49] dark:text-[#45D483] shadow-xs'
+                    : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]"></span>
@@ -593,8 +593,8 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 onClick={() => setActiveSegment('instagram')}
                 className={`flex-1 py-1 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1 ${
                   activeSegment === 'instagram'
-                    ? 'bg-white text-[#252B28] shadow-xs'
-                    : 'text-[#6C7671] hover:text-[#252B28]'
+                    ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
+                    : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600"></span>
@@ -666,11 +666,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       {/* ===================================================================
           COLUNA 2: CHAT CENTRAL (Mensagens Reais Dinâmicas)
           =================================================================== */}
-      <div className="flex-1 flex flex-col justify-between bg-[#FAFBFB] min-w-0 relative">
+      <div className="flex-1 flex flex-col justify-between bg-[#FAFBFB] dark:bg-[#111413] min-w-0 relative">
         {activeConversation ? (
           <>
             {/* Cabeçalho do Chat */}
-            <div className="h-16 px-6 bg-white border-b border-[#E5E9E7]/80 flex items-center justify-between shrink-0">
+            <div className="h-16 px-6 bg-white dark:bg-[#151917] border-b border-[#E5E9E7]/80 dark:border-[#262E2A] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -679,7 +679,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     alt={activeConversation.contact.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#45D483] border-2 border-white" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#45D483] border-2 border-white dark:border-[#151917]" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-bold text-[#252B28] truncate">
@@ -908,10 +908,10 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                               <div
                                 className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-xs ${
                                   isAgent
-                                    ? 'bg-[#252B28] text-white rounded-tr-xs text-left'
+                                    ? 'bg-[#252B28] dark:bg-[#222926] text-white rounded-tr-xs text-left'
                                     : isAI
-                                    ? 'bg-[#EAFBF2] text-[#1E7E49] border border-emerald-200 rounded-tl-xs'
-                                    : 'bg-white border border-[#E5E9E7] text-[#252B28] rounded-tl-xs'
+                                    ? 'bg-[#EAFBF2] dark:bg-[#1E3328] text-[#1E7E49] dark:text-[#45D483] border border-emerald-200 dark:border-emerald-800/40 rounded-tl-xs'
+                                    : 'bg-white dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2C3530] text-[#252B28] dark:text-[#F3F6F4] rounded-tl-xs'
                                 }`}
                               >
                                 {msg.content}
@@ -920,7 +920,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                             {/* Tipo: FOTO / IMAGEM */}
                             {msg.messageType === 'image' && (
-                              <div className="bg-white p-2 rounded-2xl border border-[#E5E9E7] shadow-xs space-y-1.5 max-w-sm">
+                              <div className="bg-white dark:bg-[#1D2320] p-2 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs space-y-1.5 max-w-sm">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={msg.mediaUrl || msg.content}
@@ -928,7 +928,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                                   className="rounded-xl object-cover max-h-64 w-full"
                                 />
                                 {msg.content && !msg.content.startsWith('data:') && (
-                                  <p className="text-xs text-[#252B28] px-1">{msg.content}</p>
+                                  <p className="text-xs text-[#252B28] dark:text-[#F3F6F4] px-1">{msg.content}</p>
                                 )}
                               </div>
                             )}
@@ -938,8 +938,8 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                               <div
                                 className={`p-2.5 px-4 rounded-full shadow-xs flex items-center gap-3 border ${
                                   isAgent
-                                    ? 'bg-[#252B28] text-white border-[#333E38]'
-                                    : 'bg-white border-[#E5E9E7] text-[#252B28]'
+                                    ? 'bg-[#252B28] dark:bg-[#222926] text-white border-[#333E38]'
+                                    : 'bg-white dark:bg-[#1D2320] border-[#E5E9E7] dark:border-[#2C3530] text-[#252B28] dark:text-[#F3F6F4]'
                                 }`}
                               >
                                 <button
@@ -988,12 +988,12 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                             {/* Tipo: DOCUMENTO / ARQUIVO */}
                             {msg.messageType === 'document' && (
-                              <div className="bg-white p-3 rounded-2xl border border-[#E5E9E7] shadow-xs flex items-center gap-3 max-w-sm">
-                                <div className="w-10 h-10 rounded-xl bg-[#EAFBF2] text-[#1E7E49] flex items-center justify-center shrink-0">
+                              <div className="bg-white dark:bg-[#1D2320] p-3 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs flex items-center gap-3 max-w-sm">
+                                <div className="w-10 h-10 rounded-xl bg-[#EAFBF2] dark:bg-[#1E3328] text-[#1E7E49] dark:text-[#45D483] flex items-center justify-center shrink-0">
                                   <FileText className="w-5 h-5 text-[#45D483]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-[#252B28] truncate">{msg.content}</p>
+                                  <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4] truncate">{msg.content}</p>
                                   <p className="text-[10px] text-[#AEB7B3]">Arquivo Anexado</p>
                                 </div>
                                 <button
@@ -1076,15 +1076,15 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 // Modo Composer Padrão
                 <form
                   onSubmit={handleSendText}
-                  className="max-w-2xl mx-auto bg-white rounded-full border border-[#E5E9E7] p-1.5 pl-3 shadow-lg shadow-black/[0.04] flex items-center gap-2 focus-within:border-[#45D483] transition-colors relative"
+                  className="max-w-2xl mx-auto bg-white dark:bg-[#181E1B] rounded-full border border-[#E5E9E7] dark:border-[#2A342E] p-1.5 pl-3 shadow-lg shadow-black/[0.04] flex items-center gap-2 focus-within:border-[#45D483] transition-colors relative"
                 >
                   {/* Menu Popover de Anexos */}
                   {showAttachMenu && (
-                    <div className="absolute bottom-14 left-4 bg-white border border-[#E5E9E7] rounded-2xl p-2 shadow-xl flex flex-col gap-1 z-30 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-150">
+                    <div className="absolute bottom-14 left-4 bg-white dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2A342E] rounded-2xl p-2 shadow-xl flex flex-col gap-1 z-30 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-150">
                       <button
                         type="button"
                         onClick={() => imageInputRef.current?.click()}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] text-[#252B28] transition-colors text-left"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] dark:hover:bg-[#252B28] text-[#252B28] dark:text-[#F3F6F4] transition-colors text-left"
                       >
                         <ImageIcon className="w-4 h-4 text-[#45D483]" />
                         <span>Enviar Foto</span>
@@ -1092,7 +1092,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] text-[#252B28] transition-colors text-left"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] dark:hover:bg-[#252B28] text-[#252B28] dark:text-[#F3F6F4] transition-colors text-left"
                       >
                         <FileText className="w-4 h-4 text-[#3B82F6]" />
                         <span>Enviar Documento / Arquivo</span>
@@ -1163,7 +1163,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
           COLUNA 3: GAVETA LATERAL DIREITA (Detalhes do Contato & Mídias)
           =================================================================== */}
       {rightDrawerOpen && activeConversation && (
-        <div className="w-[280px] md:w-[300px] bg-white border-l border-[#E5E9E7]/80 flex flex-col justify-between shrink-0 select-none overflow-y-auto">
+        <div className="w-[280px] md:w-[300px] bg-white dark:bg-[#151917] border-l border-[#E5E9E7]/80 dark:border-[#262E2A] flex flex-col justify-between shrink-0 select-none overflow-y-auto">
           <div>
             <div className="h-16 px-5 border-b border-[#F1F3F2] flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#252B28]">Detalhes do Contato</h3>

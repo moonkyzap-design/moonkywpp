@@ -108,7 +108,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
             </button>
             <button
               onClick={() => onNavigate('integrations')}
-              className="bg-white hover:bg-[#F7F9F8] border border-[#E5E9E7] text-[#252B28] text-xs font-semibold px-3 py-2.5 rounded-xl transition-colors flex items-center gap-1.5"
+              className="bg-white hover:bg-[#F7F9F8] dark:bg-[#151917] dark:hover:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] text-[#252B28] dark:text-[#F3F6F4] text-xs font-semibold px-3 py-2.5 rounded-xl transition-colors flex items-center gap-1.5"
             >
               <Radio className="w-3.5 h-3.5 text-[#AEB7B3]" />
               <span>Canais</span>
@@ -125,8 +125,8 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
                 key={idx}
                 className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                   m.accent
-                    ? 'bg-gradient-to-b from-[#FFFFFF] to-[#EAFBF2] border-emerald-200 shadow-xs'
-                    : 'bg-white border-[#E5E9E7] shadow-xs'
+                    ? 'bg-gradient-to-b from-[#FFFFFF] to-[#EAFBF2] dark:from-[#1D2320] dark:to-[#17261F] border-emerald-200 dark:border-emerald-800/40 shadow-xs'
+                    : 'bg-white dark:bg-[#151917] border-[#E5E9E7] dark:border-[#262E2A] shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between gap-1">
@@ -256,7 +256,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
         </div>
 
         {/* Distribuição por Canal & IA vs Humano */}
-        <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs flex flex-col justify-between space-y-6">
+        <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <h2 className="text-sm font-bold text-[#252B28]">Distribuição por Canal</h2>
             <p className="text-xs text-[#AEB7B3] mt-0.5">Roteamento ativo via WAME API</p>
@@ -306,7 +306,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
       {/* Grid Inferior: Atividades Recentes & Gateways de Canais */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Feed de Atividades Recentes */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+        <div className="lg:col-span-2 bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-[#252B28]">Fluxo de Atividades Recentes</h2>
@@ -361,7 +361,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
         </div>
 
         {/* Status dos Gateways */}
-        <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-[#252B28]">Gateways de Canais</h2>
             <button

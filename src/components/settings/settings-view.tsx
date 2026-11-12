@@ -87,7 +87,7 @@ export function SettingsView() {
       </div>
 
       {/* Detalhes da Organização */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
         <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
           <Building className="w-4 h-4 text-[#45D483]" />
           <span>Organização (Empresa)</span>
@@ -102,7 +102,7 @@ export function SettingsView() {
               type="text"
               readOnly
               value={initialOrganization.name}
-              className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] font-semibold"
+              className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2A342E] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-[#F3F6F4] font-semibold"
             />
           </div>
 
@@ -114,14 +114,14 @@ export function SettingsView() {
               type="text"
               readOnly
               value={initialOrganization.slug}
-              className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] font-mono"
+              className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2A342E] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-[#F3F6F4] font-mono"
             />
           </div>
         </div>
       </div>
 
       {/* Checklist de Conexão com o Ambiente */}
-      <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
             <Key className="w-4 h-4 text-[#45D483]" />
@@ -203,8 +203,8 @@ export function SettingsView() {
               key={p.id}
               className={`p-6 rounded-2xl border transition-all ${
                 p.highlight
-                  ? 'bg-white border-[#252B28] shadow-md ring-2 ring-[#45D483]/30'
-                  : 'bg-white border-[#E5E9E7] shadow-xs'
+                  ? 'bg-white dark:bg-[#151917] border-[#252B28] dark:border-[#45D483] shadow-md ring-2 ring-[#45D483]/30'
+                  : 'bg-white dark:bg-[#151917] border-[#E5E9E7] dark:border-[#262E2A] shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between">

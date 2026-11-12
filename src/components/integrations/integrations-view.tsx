@@ -97,7 +97,7 @@ export function IntegrationsView() {
           href="https://wame.api.br/oficial"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-white hover:bg-[#F7F9F8] border border-[#E5E9E7] text-[#252B28] text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 self-start"
+          className="bg-white hover:bg-[#F7F9F8] dark:bg-[#151917] dark:hover:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] text-[#252B28] dark:text-[#F3F6F4] text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 self-start"
         >
           <span>Documentação Oficial WAME</span>
           <ExternalLink className="w-3.5 h-3.5 text-[#AEB7B3]" />
@@ -121,8 +121,8 @@ export function IntegrationsView() {
               }}
               className={`p-6 rounded-2xl border cursor-pointer transition-all ${
                 isSelected
-                  ? 'bg-white border-[#252B28] shadow-md ring-2 ring-[#45D483]/30'
-                  : 'bg-white border-[#E5E9E7] shadow-xs hover:border-[#AEB7B3]'
+                  ? 'bg-white dark:bg-[#151917] border-[#252B28] dark:border-[#45D483] shadow-md ring-2 ring-[#45D483]/30'
+                  : 'bg-white dark:bg-[#151917] border-[#E5E9E7] dark:border-[#262E2A] shadow-xs hover:border-[#AEB7B3]'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -179,7 +179,7 @@ export function IntegrationsView() {
 
       {/* Configuração Detalhada do Canal Selecionado */}
       {selectedChannel && (
-        <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-6">
+        <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-6">
           <div className="flex items-center justify-between border-b border-[#F1F3F2] pb-4">
             <div>
               <h2 className="text-sm font-bold text-[#252B28]">
