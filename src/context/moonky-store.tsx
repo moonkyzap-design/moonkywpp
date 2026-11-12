@@ -78,7 +78,12 @@ interface MoonkyStoreContextType {
 
   // Actions
   setActiveConversationId: (id: string) => void;
-  sendMessage: (content: string, type?: MessageType, mediaUrl?: string) => Promise<void>;
+  sendMessage: (
+    content: string,
+    type?: MessageType,
+    mediaUrl?: string,
+    metadata?: Record<string, unknown>
+  ) => Promise<void>;
   simulateCustomerIncomingMessage: (convId: string, text: string) => Promise<void>;
   updateConversationStatus: (convId: string, status: ConversationStatus) => void;
   updateConversationAIStatus: (convId: string, aiStatus: AIStatus) => void;
@@ -254,7 +259,8 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   const sendMessage = async (
     content: string,
     type: MessageType = 'text',
-    mediaUrl?: string
+    mediaUrl?: string,
+    metadata?: Record<string, unknown>
   ) => {
     if (!activeConversationId) return;
     if (type === 'text' && !content.trim()) return;
@@ -270,6 +276,7 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       content: content.trim(),
       messageType: type,
       mediaUrl,
+      metadata: metadata || {},
       deliveryStatus: 'delivered',
       timestamp: timeStr
     };
@@ -291,6 +298,8 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     const snippet =
       type === 'image'
         ? '📷 Foto'
+        : type === 'video'
+        ? '🎥 Vídeo'
         : type === 'audio'
         ? '🎙 Mensagem de voz'
         : type === 'document'
@@ -328,6 +337,7 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           content: content.trim(),
           messageType: type,
           mediaUrl,
+          metadata: metadata || {},
           senderType: 'agent',
           channelType: activeConversation?.channelType || 'whatsapp'
         })

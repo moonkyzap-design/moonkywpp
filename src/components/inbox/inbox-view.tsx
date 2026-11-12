@@ -40,7 +40,10 @@ import {
   Pin,
   PinOff,
   Archive,
-  Trash2
+  Trash2,
+  Maximize2,
+  Eye,
+  Film
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
 import { currentUser } from '@/lib/mock-data';
@@ -140,8 +143,23 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
   // Referências para upload de arquivos
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Estado de Visualização em Tela Cheia (Fullscreen Lightbox para Foto, Vídeo e Documento)
+  const [fullscreenMedia, setFullscreenMedia] = useState<{
+    isOpen: boolean;
+    type: 'image' | 'video' | 'document';
+    url: string;
+    title: string;
+    size?: string;
+  }>({
+    isOpen: false,
+    type: 'image',
+    url: '',
+    title: ''
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -191,10 +209,35 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      await sendMessage(file.name || 'Foto enviada', 'image', dataUrl);
+      await sendMessage(file.name || 'Foto enviada', 'image', dataUrl, {
+        fileName: file.name,
+        fileSize: sizeStr,
+        mimeType: file.type
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+    setShowAttachMenu(false);
+  };
+
+  // Envio de Vídeo
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      await sendMessage(file.name || 'Vídeo gravado/enviado', 'video', dataUrl, {
+        fileName: file.name,
+        fileSize: sizeStr,
+        mimeType: file.type
+      });
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -202,12 +245,21 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   };
 
   // Envio de Documento / Anexo
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-    await sendMessage(`${file.name} (${sizeStr})`, 'document');
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      await sendMessage(`${file.name}`, 'document', dataUrl, {
+        fileName: file.name,
+        fileSize: sizeStr,
+        mimeType: file.type
+      });
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
     setShowAttachMenu(false);
   };
@@ -424,6 +476,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (fullscreenMedia.isOpen) setFullscreenMedia({ isOpen: false, type: 'image', url: '', title: '' });
         if (contextMenu.isOpen) setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
         if (convContextMenu.isOpen) setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
       }
@@ -434,7 +487,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       window.removeEventListener('click', handleClose);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [contextMenu.isOpen, convContextMenu.isOpen]);
+  }, [contextMenu.isOpen, convContextMenu.isOpen, fullscreenMedia.isOpen]);
 
   // Abertura de menu de Mensagem via botão direito
   const handleContextMenu = (e: React.MouseEvent, msg: Message) => {
@@ -627,6 +680,13 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
         ref={imageInputRef}
         accept="image/*"
         onChange={handleImageUpload}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={videoInputRef}
+        accept="video/*"
+        onChange={handleVideoUpload}
         className="hidden"
       />
       <input
@@ -1066,15 +1126,68 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                             {/* Tipo: FOTO / IMAGEM */}
                             {msg.messageType === 'image' && (
-                              <div className="bg-white dark:bg-[#1D2320] p-2 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs space-y-1.5 max-w-sm">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={msg.mediaUrl || msg.content}
-                                  alt="Foto enviada"
-                                  className="rounded-xl object-cover max-h-64 w-full"
-                                />
+                              <div
+                                onClick={() =>
+                                  setFullscreenMedia({
+                                    isOpen: true,
+                                    type: 'image',
+                                    url: msg.mediaUrl || msg.content,
+                                    title: msg.content || 'Foto em alta resolução',
+                                    size: (msg.metadata?.fileSize as string) || undefined
+                                  })
+                                }
+                                className="group/media relative bg-white dark:bg-[#1D2320] p-2 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs space-y-1.5 max-w-sm cursor-pointer hover:border-[#45D483]/60 transition-all overflow-hidden"
+                                title="Clique para abrir em tela cheia (Full Screen)"
+                              >
+                                <div className="relative overflow-hidden rounded-xl">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={msg.mediaUrl || msg.content}
+                                    alt="Foto enviada"
+                                    className="rounded-xl object-cover max-h-64 w-full group-hover/media:scale-102 transition-transform duration-200"
+                                  />
+                                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-xs font-semibold">
+                                    <Maximize2 className="w-5 h-5 text-white drop-shadow-md" />
+                                    <span className="drop-shadow-md">Tela Cheia</span>
+                                  </div>
+                                </div>
                                 {msg.content && !msg.content.startsWith('data:') && (
-                                  <p className="text-xs text-[#252B28] dark:text-[#F3F6F4] px-1">{msg.content}</p>
+                                  <p className="text-xs text-[#252B28] dark:text-[#F3F6F4] px-1 font-medium">{msg.content}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Tipo: VÍDEO */}
+                            {msg.messageType === 'video' && (
+                              <div
+                                onClick={() =>
+                                  setFullscreenMedia({
+                                    isOpen: true,
+                                    type: 'video',
+                                    url: msg.mediaUrl || msg.content,
+                                    title: msg.content || 'Vídeo',
+                                    size: (msg.metadata?.fileSize as string) || undefined
+                                  })
+                                }
+                                className="group/media relative bg-white dark:bg-[#1D2320] p-2 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs space-y-1.5 max-w-sm cursor-pointer hover:border-purple-500/60 transition-all overflow-hidden"
+                                title="Clique para reproduzir em tela cheia (Full Screen)"
+                              >
+                                <div className="relative rounded-xl overflow-hidden bg-black flex items-center justify-center">
+                                  <video
+                                    src={msg.mediaUrl || msg.content}
+                                    className="rounded-xl max-h-64 w-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover/media:bg-black/20 transition-all">
+                                    <div className="w-12 h-12 rounded-full bg-white/90 text-[#252B28] flex items-center justify-center shadow-lg transform group-hover/media:scale-110 transition-transform">
+                                      <Play className="w-6 h-6 fill-[#252B28] ml-0.5" />
+                                    </div>
+                                  </div>
+                                  <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Film className="w-3 h-3 text-purple-400" /> Fullscreen
+                                  </span>
+                                </div>
+                                {msg.content && !msg.content.startsWith('data:') && (
+                                  <p className="text-xs text-[#252B28] dark:text-[#F3F6F4] px-1 font-medium">{msg.content}</p>
                                 )}
                               </div>
                             )}
@@ -1134,22 +1247,75 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                             {/* Tipo: DOCUMENTO / ARQUIVO */}
                             {msg.messageType === 'document' && (
-                              <div className="bg-white dark:bg-[#1D2320] p-3 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs flex items-center gap-3 max-w-sm">
-                                <div className="w-10 h-10 rounded-xl bg-[#EAFBF2] dark:bg-[#1E3328] text-[#1E7E49] dark:text-[#45D483] flex items-center justify-center shrink-0">
-                                  <FileText className="w-5 h-5 text-[#45D483]" />
+                              <div
+                                onClick={() =>
+                                  setFullscreenMedia({
+                                    isOpen: true,
+                                    type: 'document',
+                                    url: msg.mediaUrl || '',
+                                    title: msg.content,
+                                    size: (msg.metadata?.fileSize as string) || undefined
+                                  })
+                                }
+                                className="group/doc bg-white dark:bg-[#1D2320] p-3 rounded-2xl border border-[#E5E9E7] dark:border-[#2C3530] shadow-xs flex items-center gap-3 max-w-sm cursor-pointer hover:border-[#3B82F6]/60 transition-all"
+                                title="Clique para abrir o documento em tela cheia (Full Screen)"
+                              >
+                                <div className="w-11 h-11 rounded-xl bg-[#EAFBF2] dark:bg-[#1E3328] text-[#1E7E49] dark:text-[#45D483] flex items-center justify-center shrink-0 group-hover/doc:scale-105 transition-transform">
+                                  <FileText className="w-5 h-5 text-[#3B82F6]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4] truncate">{msg.content}</p>
-                                  <p className="text-[10px] text-[#AEB7B3]">Arquivo Anexado</p>
+                                  <p className="text-[10px] text-[#AEB7B3] flex items-center gap-1.5 mt-0.5">
+                                    <span>Documento</span>
+                                    {Boolean(msg.metadata?.fileSize) && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="font-mono">{String(msg.metadata?.fileSize)}</span>
+                                      </>
+                                    )}
+                                    <span>•</span>
+                                    <span className="text-[#3B82F6] font-semibold flex items-center gap-0.5">
+                                      <Maximize2 className="w-2.5 h-2.5" /> Full Screen
+                                    </span>
+                                  </p>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => alert(`Iniciando download seguro de: ${msg.content}`)}
-                                  className="w-8 h-8 rounded-full bg-[#F1F3F2] hover:bg-[#E5E9E7] text-[#252B28] flex items-center justify-center transition-colors shrink-0"
-                                  title="Baixar Arquivo"
-                                >
-                                  <Download className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFullscreenMedia({
+                                        isOpen: true,
+                                        type: 'document',
+                                        url: msg.mediaUrl || '',
+                                        title: msg.content,
+                                        size: (msg.metadata?.fileSize as string) || undefined
+                                      });
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-[#F1F3F2] dark:bg-[#252B28] hover:bg-[#3B82F6] hover:text-white text-[#252B28] dark:text-[#F3F6F4] flex items-center justify-center transition-colors"
+                                    title="Visualizar em Tela Cheia"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (msg.mediaUrl) {
+                                        const a = document.createElement('a');
+                                        a.href = msg.mediaUrl;
+                                        a.download = msg.content;
+                                        a.click();
+                                      } else {
+                                        alert(`Baixando documento seguro: ${msg.content}`);
+                                      }
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-[#F1F3F2] dark:bg-[#252B28] hover:bg-[#E5E9E7] dark:hover:bg-[#303834] text-[#252B28] dark:text-[#F3F6F4] flex items-center justify-center transition-colors"
+                                    title="Baixar Arquivo"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1237,11 +1403,19 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                       </button>
                       <button
                         type="button"
+                        onClick={() => videoInputRef.current?.click()}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] dark:hover:bg-[#252B28] text-[#252B28] dark:text-[#F3F6F4] transition-colors text-left"
+                      >
+                        <Film className="w-4 h-4 text-purple-400" />
+                        <span>Enviar Vídeo</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#F1F3F2] dark:hover:bg-[#252B28] text-[#252B28] dark:text-[#F3F6F4] transition-colors text-left"
                       >
                         <FileText className="w-4 h-4 text-[#3B82F6]" />
-                        <span>Enviar Documento / Arquivo</span>
+                        <span>Enviar Documento / PDF</span>
                       </button>
                     </div>
                   )}
@@ -1379,10 +1553,22 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                   {mediaGallery.map((m) => (
                     <div
                       key={m.id}
-                      className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() =>
+                        setFullscreenMedia({
+                          isOpen: true,
+                          type: 'image',
+                          url: m.url,
+                          title: 'Foto Compartilhada'
+                        })
+                      }
+                      className="group/thumb relative aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all ring-1 ring-black/5 dark:ring-white/10"
+                      title="Clique para abrir em tela cheia (Full Screen)"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={m.url} alt="Mídia compartilhada" className="w-full h-full object-cover" />
+                      <img src={m.url} alt="Mídia compartilhada" className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-200" />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                        <Maximize2 className="w-3.5 h-3.5 text-white" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1391,15 +1577,29 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               {/* Aba Arquivos */}
               {rightTab === 'files' && (
                 <div className="space-y-2 text-xs">
-                  <div className="p-2.5 bg-[#F7F9F8] rounded-xl border border-[#E5E9E7] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#45D483]" />
-                      <div>
-                        <p className="font-semibold text-[#252B28]">Tabela_Precos_2026.pdf</p>
-                        <p className="text-[10px] text-[#AEB7B3]">2.4 MB</p>
+                  <div
+                    onClick={() =>
+                      setFullscreenMedia({
+                        isOpen: true,
+                        type: 'document',
+                        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                        title: 'Tabela_Precos_2026.pdf',
+                        size: '2.4 MB'
+                      })
+                    }
+                    className="p-2.5 bg-[#F7F9F8] dark:bg-[#1D2320] rounded-xl border border-[#E5E9E7] dark:border-[#2C3530] flex items-center justify-between cursor-pointer hover:border-[#3B82F6]/50 transition-all group/file"
+                    title="Clique para abrir em tela cheia (Full Screen)"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="w-4 h-4 text-[#3B82F6] shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[#252B28] dark:text-[#F3F6F4] truncate">Tabela_Precos_2026.pdf</p>
+                        <p className="text-[10px] text-[#AEB7B3]">2.4 MB • Clique p/ Tela Cheia</p>
                       </div>
                     </div>
-                    <Download className="w-3.5 h-3.5 text-[#AEB7B3] hover:text-[#252B28] cursor-pointer" />
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Maximize2 className="w-3.5 h-3.5 text-[#AEB7B3] group-hover/file:text-[#3B82F6] transition-colors" />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1663,6 +1863,184 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#252B28] text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-top-3">
           <span className="w-2 h-2 rounded-full bg-[#45D483]" />
           <span>{pinToast}</span>
+        </div>
+      )}
+
+      {/* ===================================================================
+          MODAL FULL SCREEN / LIGHTBOX (FOTO, VÍDEO E DOCUMENTO)
+          =================================================================== */}
+      {fullscreenMedia.isOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between animate-in fade-in duration-200 select-none"
+          onClick={() => setFullscreenMedia({ isOpen: false, type: 'image', url: '', title: '' })}
+        >
+          {/* Barra Superior do Fullscreen */}
+          <div
+            className="h-16 px-6 bg-black/40 border-b border-white/10 flex items-center justify-between shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                {fullscreenMedia.type === 'image' && <ImageIcon className="w-5 h-5 text-[#45D483]" />}
+                {fullscreenMedia.type === 'video' && <Film className="w-5 h-5 text-purple-400" />}
+                {fullscreenMedia.type === 'document' && <FileText className="w-5 h-5 text-[#3B82F6]" />}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-white truncate max-w-md">
+                  {fullscreenMedia.title}
+                </h3>
+                <p className="text-[11px] text-[#AEB7B3] flex items-center gap-2">
+                  <span className="capitalize">
+                    {fullscreenMedia.type === 'image'
+                      ? 'Imagem em alta resolução'
+                      : fullscreenMedia.type === 'video'
+                      ? 'Vídeo Full HD'
+                      : 'Documento Anexo'}
+                  </span>
+                  {fullscreenMedia.size && (
+                    <>
+                      <span>•</span>
+                      <span className="font-mono">{fullscreenMedia.size}</span>
+                    </>
+                  )}
+                  <span>•</span>
+                  <span className="text-[#45D483]">Armazenado no Banco Supabase</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Ações da Barra Superior */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Botão Baixar */}
+              {fullscreenMedia.url && (
+                <a
+                  href={fullscreenMedia.url}
+                  download={fullscreenMedia.title || 'arquivo'}
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10"
+                  title="Baixar arquivo"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Baixar</span>
+                </a>
+              )}
+
+              {/* Botão Abrir em Nova Aba */}
+              {fullscreenMedia.url && !fullscreenMedia.url.startsWith('data:') && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(fullscreenMedia.url, '_blank');
+                  }}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+                  title="Abrir em Nova Aba"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Botão Fechar */}
+              <button
+                type="button"
+                onClick={() => setFullscreenMedia({ isOpen: false, type: 'image', url: '', title: '' })}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-rose-500 text-white flex items-center justify-center transition-colors ml-2"
+                title="Fechar (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Área Central de Visualização Fullscreen */}
+          <div
+            className="flex-1 flex items-center justify-center p-4 md:p-8 min-h-0 overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Visualização de FOTO */}
+            {fullscreenMedia.type === 'image' && (
+              <div className="relative max-h-full max-w-full flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={fullscreenMedia.url}
+                  alt={fullscreenMedia.title}
+                  className="max-h-[82vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl shadow-black ring-1 ring-white/10"
+                />
+              </div>
+            )}
+
+            {/* Visualização de VÍDEO */}
+            {fullscreenMedia.type === 'video' && (
+              <div className="relative max-h-full max-w-full flex items-center justify-center">
+                <video
+                  src={fullscreenMedia.url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="max-h-[82vh] max-w-[92vw] rounded-2xl shadow-2xl shadow-black ring-1 ring-white/10 bg-black"
+                />
+              </div>
+            )}
+
+            {/* Visualização de DOCUMENTO */}
+            {fullscreenMedia.type === 'document' && (
+              <div className="w-full max-w-4xl h-[80vh] flex flex-col bg-[#1D2320] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                {fullscreenMedia.url && (fullscreenMedia.url.includes('pdf') || fullscreenMedia.url.startsWith('data:application/pdf')) ? (
+                  <iframe
+                    src={fullscreenMedia.url}
+                    className="w-full h-full border-0 rounded-2xl bg-white"
+                    title={fullscreenMedia.title}
+                  />
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                    <div className="w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-[#3B82F6] flex items-center justify-center">
+                      <FileText className="w-10 h-10" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-white">{fullscreenMedia.title}</h4>
+                      <p className="text-xs text-[#AEB7B3] mt-1">
+                        Documento salvo com integridade no banco de dados Supabase
+                      </p>
+                      {fullscreenMedia.size && (
+                        <span className="inline-block mt-2 font-mono text-xs font-semibold bg-white/10 text-white px-3 py-1 rounded-full">
+                          Tamanho: {fullscreenMedia.size}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-4">
+                      {fullscreenMedia.url ? (
+                        <a
+                          href={fullscreenMedia.url}
+                          download={fullscreenMedia.title}
+                          className="px-5 py-2.5 rounded-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] font-bold text-xs flex items-center gap-2 shadow-lg transition-all"
+                        >
+                          <Download className="w-4 h-4" /> Baixar Documento
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => alert(`Iniciando download seguro de: ${fullscreenMedia.title}`)}
+                          className="px-5 py-2.5 rounded-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] font-bold text-xs flex items-center gap-2 shadow-lg transition-all"
+                        >
+                          <Download className="w-4 h-4" /> Baixar Documento
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Barra Inferior com Informações e Atalho */}
+          <div
+            className="h-12 px-6 bg-black/40 border-t border-white/10 flex items-center justify-between text-xs text-[#AEB7B3] shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span>Pressione <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">ESC</kbd> ou clique no X para fechar a tela cheia</span>
+            <span className="hidden sm:inline font-mono">Visualizador Oficial Moonkyzap Omnichannel</span>
+          </div>
         </div>
       )}
     </div>

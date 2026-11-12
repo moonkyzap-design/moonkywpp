@@ -106,6 +106,7 @@ export interface Message {
   isPinned?: boolean;
   pinnedAt?: string;
   isArchived?: boolean;
+  metadata?: Record<string, unknown>;
   aiMetadata?: {
     confidence?: number;
     tokens?: number;

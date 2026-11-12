@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
       messageType = 'text',
       mediaUrl,
       senderType = 'agent',
-      channelType = 'whatsapp'
+      channelType = 'whatsapp',
+      metadata = {}
     } = body;
 
     const convUUID = CONVERSATION_UUID_MAP[conversationId] || conversationId;
@@ -47,9 +48,10 @@ export async function POST(req: NextRequest) {
       conversation_id: convUUID,
       channel_id: channelUUID,
       sender_type: senderType,
-      content: content || (messageType === 'audio' ? 'Mensagem de voz' : 'Arquivo anexado'),
+      content: content || (messageType === 'audio' ? 'Mensagem de voz' : messageType === 'video' ? 'Vídeo' : 'Arquivo anexado'),
       message_type: messageType,
       media_url: mediaUrl || null,
+      metadata: metadata || {},
       delivery_status: 'delivered'
     }).select();
 
