@@ -33,19 +33,9 @@ export function MoonkyWordmark({ size = 'md', className = '', showIcon = true }:
   return (
     <div className={`inline-flex items-center gap-2 select-none ${className}`}>
       {showIcon && (
-        <div className="flex items-center -space-x-1 shrink-0">
-          <div className={`${iconSizes[size]} overflow-hidden bg-[#151917] p-0.5 shrink-0 flex items-center justify-center border border-[#262E2A]/50 shadow-xs z-10`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain" />
-          </div>
-          <div className="w-4 h-4 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-0.5 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
-          </div>
-          <div className="w-4 h-4 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-0.5 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
-          </div>
+        <div className={`${iconSizes[size]} overflow-hidden bg-[#151917] p-0.5 shrink-0 flex items-center justify-center border border-[#262E2A]/50 shadow-xs rounded-xl`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain rounded-lg" />
         </div>
       )}
       <div className="inline-flex items-baseline">

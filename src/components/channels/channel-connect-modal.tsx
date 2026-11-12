@@ -120,19 +120,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
         {/* Header */}
         <div className="p-6 pb-4 border-b border-[#F1F3F2] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center -space-x-1 shrink-0">
-              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-[#151917] p-0.5 border border-[#262E2A]/60 shadow-sm flex items-center justify-center z-10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain rounded-xl" />
-              </div>
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-1 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
-              </div>
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-1 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
-              </div>
+            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-[#151917] p-0.5 border border-[#262E2A]/60 shadow-sm flex items-center justify-center shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div>
               <h2 className="text-base font-bold text-[#252B28] dark:text-[#F3F6F4]">Conexão de Canais Oficiais</h2>
