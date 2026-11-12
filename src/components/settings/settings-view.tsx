@@ -88,10 +88,21 @@ export function SettingsView() {
 
       {/* Detalhes da Organização */}
       <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold text-[#252B28] flex items-center gap-2">
-          <Building className="w-4 h-4 text-[#45D483]" />
-          <span>Organização (Empresa)</span>
-        </h2>
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#151917] p-1 border border-[#262E2A]/60 shadow-sm flex items-center justify-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-m.png" alt="Logotipo Oficial" className="w-full h-full object-contain rounded-xl" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4] flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#45D483]" />
+              <span>Organização (Empresa)</span>
+            </h2>
+            <p className="text-xs text-[#6C7671] dark:text-[#AEB7B3] mt-0.5">
+              Logotipo oficial e configurações da sua instância Moonky
+            </p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div>

@@ -58,15 +58,19 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
 
   return (
     <aside className="w-[74px] md:w-[78px] bg-white dark:bg-[#151917] border-r border-[#E5E9E7]/80 dark:border-[#262E2A] flex flex-col justify-between items-center py-6 shrink-0 select-none z-20">
-      {/* Topo: Monograma Moonky */}
+      {/* Topo: Logotipo Oficial Moonky */}
       <div className="flex flex-col items-center gap-7">
         <button
           onClick={() => onSelectTab('inbox')}
           title="Moonky Atendimento Omnichannel"
-          className="relative w-11 h-11 rounded-2xl bg-[#252B28] flex items-center justify-center text-white shadow-sm hover:scale-105 transition-transform"
+          className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-sm hover:scale-105 transition-transform flex items-center justify-center p-0.5 bg-[#151917] border border-[#262E2A]/60 group"
         >
-          <span className="font-extrabold text-xl tracking-tighter text-white">M</span>
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#45D483] ring-2 ring-[#252B28]" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-m.png"
+            alt="Moonky Logo"
+            className="w-full h-full object-contain rounded-xl"
+          />
         </button>
 
         {/* Lista de Ícones de Navegação com labels miniaturas */}

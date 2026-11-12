@@ -22,7 +22,7 @@ export const initialOrganization: Organization = {
   id: 'org-moonky-global-01',
   name: 'Moonky Technologies',
   slug: 'moonky-tech',
-  logoUrl: '',
+  logoUrl: '/logo-m.png',
   plan: 'growth'
 };
 

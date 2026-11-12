@@ -6,7 +6,8 @@ export const metadata: Metadata = {
   description:
     'Plataforma moderna de comunicação unificada para WhatsApp e Instagram Direct com IA, transbordo humano, CRM e automações.',
   icons: {
-    icon: '/favicon.ico'
+    icon: '/logo-m.png',
+    apple: '/logo-m.png'
   }
 };
 
