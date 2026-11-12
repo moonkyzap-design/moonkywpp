@@ -58,20 +58,41 @@ export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: Sidebar
 
   return (
     <aside className="w-[74px] md:w-[78px] bg-white dark:bg-[#151917] border-r border-[#E5E9E7]/80 dark:border-[#262E2A] flex flex-col justify-between items-center py-6 shrink-0 select-none z-20">
-      {/* Topo: Logotipo Oficial Moonky */}
+      {/* Topo: Logotipo Oficial Moonky com WhatsApp & Instagram */}
       <div className="flex flex-col items-center gap-7">
-        <button
-          onClick={() => onSelectTab('inbox')}
-          title="Moonky Atendimento Omnichannel"
-          className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-sm hover:scale-105 transition-transform flex items-center justify-center p-0.5 bg-[#151917] border border-[#262E2A]/60 group"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-m.png"
-            alt="Moonky Logo"
-            className="w-full h-full object-contain rounded-xl"
-          />
-        </button>
+        <div className="relative group flex flex-col items-center">
+          <button
+            onClick={() => onSelectTab('inbox')}
+            title="Moonky Atendimento Omnichannel (WhatsApp & Instagram)"
+            className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-sm hover:scale-105 transition-transform flex items-center justify-center p-0.5 bg-[#151917] border border-[#262E2A]/60"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-m.png"
+              alt="Moonky Logo"
+              className="w-full h-full object-contain rounded-xl"
+            />
+          </button>
+          {/* Badges oficiais WhatsApp & Instagram integradas ao logotipo */}
+          <div className="flex items-center -space-x-1.5 -mt-2 z-10 pointer-events-auto">
+            <button
+              onClick={() => onOpenConnectModal ? onOpenConnectModal() : onSelectTab('integrations')}
+              title="WhatsApp Oficial"
+              className="w-5 h-5 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-sm ring-1 ring-black/10 dark:ring-white/20 flex items-center justify-center hover:scale-115 transition-transform cursor-pointer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
+            </button>
+            <button
+              onClick={() => onOpenConnectModal ? onOpenConnectModal() : onSelectTab('integrations')}
+              title="Instagram Direct Oficial"
+              className="w-5 h-5 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-sm ring-1 ring-black/10 dark:ring-white/20 flex items-center justify-center hover:scale-115 transition-transform cursor-pointer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
+            </button>
+          </div>
+        </div>
 
         {/* Lista de Ícones de Navegação com labels miniaturas */}
         <nav className="flex flex-col items-center gap-5">

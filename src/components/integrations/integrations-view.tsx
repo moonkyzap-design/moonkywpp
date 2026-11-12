@@ -127,14 +127,13 @@ export function IntegrationsView() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-xs ${
-                      isWhatsApp
-                        ? 'bg-[#25D366]'
-                        : 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600'
-                    }`}
-                  >
-                    {isWhatsApp ? 'WA' : 'IG'}
+                  <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1D2320] p-2 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={isWhatsApp ? '/logo-wpp.png' : '/logo-insta.png'}
+                      alt={isWhatsApp ? 'WhatsApp' : 'Instagram'}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-[#252B28]">{ch.name}</h3>
@@ -180,14 +179,24 @@ export function IntegrationsView() {
       {/* Configuração Detalhada do Canal Selecionado */}
       {selectedChannel && (
         <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-6">
-          <div className="flex items-center justify-between border-b border-[#F1F3F2] pb-4">
-            <div>
-              <h2 className="text-sm font-bold text-[#252B28]">
-                Configurar Gateway: {selectedChannel.name}
-              </h2>
-              <p className="text-xs text-[#AEB7B3] mt-0.5">
-                Endpoint destino: https://server.wame.api.br/{'{'}CHAVE{'}'}/...
-              </p>
+          <div className="flex items-center justify-between border-b border-[#F1F3F2] dark:border-[#262E2A] pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1D2320] p-1.5 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedChannel.type === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                  alt={selectedChannel.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4]">
+                  Configurar Gateway: {selectedChannel.name}
+                </h2>
+                <p className="text-xs text-[#AEB7B3] mt-0.5">
+                  Endpoint destino: https://server.wame.api.br/{'{'}CHAVE{'}'}/...
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

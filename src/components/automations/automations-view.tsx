@@ -548,11 +548,12 @@ Diretrizes Obrigatórias para a IA:
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div className="flex items-center justify-between p-3.5 bg-[#FAFBFB] rounded-xl border border-[#E5E9E7]">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs">
-                        WA
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1D2320] p-1 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#252B28]">Responder no WhatsApp</p>
+                        <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">Responder no WhatsApp</p>
                         <p className="text-[10px] text-[#AEB7B3]">Respostas automáticas para conversas de WhatsApp</p>
                       </div>
                     </div>
@@ -571,13 +572,14 @@ Diretrizes Obrigatórias para a IA:
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 bg-[#FAFBFB] rounded-xl border border-[#E5E9E7]">
+                  <div className="flex items-center justify-between p-3.5 bg-[#FAFBFB] dark:bg-[#19201C] rounded-xl border border-[#E5E9E7] dark:border-[#262E2A]">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs">
-                        IG
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1D2320] p-1 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#252B28]">Responder no Instagram Direct</p>
+                        <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">Responder no Instagram Direct</p>
                         <p className="text-[10px] text-[#AEB7B3]">Respostas automáticas para mensagens do Instagram</p>
                       </div>
                     </div>

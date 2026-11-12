@@ -757,25 +757,27 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               </button>
               <button
                 onClick={() => setActiveSegment('whatsapp')}
-                className={`flex-1 py-1 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   activeSegment === 'whatsapp'
                     ? 'bg-white dark:bg-[#151917] text-[#1E7E49] dark:text-[#45D483] shadow-xs'
                     : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]"></span>
-                WhatsApp
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-wpp.png" alt="WhatsApp" className="w-3.5 h-3.5 object-contain" />
+                <span>WhatsApp</span>
               </button>
               <button
                 onClick={() => setActiveSegment('instagram')}
-                className={`flex-1 py-1 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 px-2.5 rounded-full text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   activeSegment === 'instagram'
                     ? 'bg-white dark:bg-[#151917] text-[#252B28] dark:text-[#F3F6F4] shadow-xs'
                     : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600"></span>
-                Instagram
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-insta.png" alt="Instagram" className="w-3.5 h-3.5 object-contain" />
+                <span>Instagram</span>
               </button>
             </div>
           </div>
@@ -868,12 +870,17 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                         alt={conv.contact.name}
                         className="w-11 h-11 rounded-full object-cover"
                       />
-                      <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#151917] ${
-                          isWhatsApp ? 'bg-[#45D483]' : 'bg-gradient-to-tr from-amber-500 to-purple-600'
-                        }`}
+                      <div
+                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-xs ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center"
                         title={isWhatsApp ? 'WhatsApp Oficial' : 'Instagram Direct Oficial'}
-                      />
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={isWhatsApp ? '/logo-wpp.png' : '/logo-insta.png'}
+                          alt={isWhatsApp ? 'WhatsApp' : 'Instagram'}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -943,17 +950,34 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     alt={activeConversation.contact.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#45D483] border-2 border-white dark:border-[#151917]" />
+                  <div
+                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-xs ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center"
+                    title={activeConversation.channelType === 'whatsapp' ? 'WhatsApp Oficial' : 'Instagram Direct Oficial'}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={activeConversation.channelType === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                      alt="Canal"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-[#252B28] truncate">
+                  <h3 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4] truncate">
                     {activeConversation.contact.name}
                   </h3>
                   <p className="text-[11px] text-[#AEB7B3] truncate flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#45D483]"></span>
-                    {activeConversation.channelType === 'whatsapp'
-                      ? `WhatsApp (${activeConversation.contact.phone || '+55 11 98877-1122'})`
-                      : `Instagram Direct (@${activeConversation.contact.instagramUsername || 'contato'})`}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={activeConversation.channelType === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                      alt="Canal"
+                      className="w-3.5 h-3.5 object-contain"
+                    />
+                    <span>
+                      {activeConversation.channelType === 'whatsapp'
+                        ? `WhatsApp (${activeConversation.contact.phone || '+55 11 98877-1122'})`
+                        : `Instagram Direct (@${activeConversation.contact.instagramUsername || 'contato'})`}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -1073,8 +1097,14 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
             {/* Feed de Mensagens Dinâmico */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="flex justify-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#AEB7B3] bg-[#F1F3F2] dark:bg-[#1D2320] px-3 py-1 rounded-full">
-                  CONVERSA INDIVIDUAL · {activeConversation.channelType === 'whatsapp' ? 'WHATSAPP OFICIAL' : 'INSTAGRAM DIRECT'}
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#AEB7B3] bg-[#F1F3F2] dark:bg-[#1D2320] px-3 py-1 rounded-full flex items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activeConversation.channelType === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                    alt="Canal"
+                    className="w-3.5 h-3.5 object-contain"
+                  />
+                  <span>CONVERSA INDIVIDUAL · {activeConversation.channelType === 'whatsapp' ? 'WHATSAPP OFICIAL' : 'INSTAGRAM DIRECT'}</span>
                 </span>
               </div>
 
@@ -1555,8 +1585,9 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                   <div className="p-3.5 bg-[#FAFBFB] dark:bg-[#19201C] border border-[#E5E9E7] dark:border-[#262E2A] rounded-2xl flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-[#45D483]/15 text-[#45D483] flex items-center justify-center font-bold text-xs">
-                        WA
+                      <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#1D2320] p-1.5 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">WhatsApp</p>
@@ -1570,8 +1601,9 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                   <div className="p-3.5 bg-[#FAFBFB] dark:bg-[#19201C] border border-[#E5E9E7] dark:border-[#262E2A] rounded-2xl flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center font-bold text-xs">
-                        IG
+                      <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#1D2320] p-1.5 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">Instagram</p>
@@ -1676,10 +1708,17 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                   alt={activeConversation.contact.name}
                   className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-white shadow-md"
                 />
-                <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-[#45D483] border-2 border-white" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white dark:bg-[#151917] p-1 shadow-md ring-2 ring-white dark:ring-[#151917] flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activeConversation.channelType === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                    alt="Canal"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
 
-              <h4 className="text-sm font-bold text-[#252B28] tracking-tight">
+              <h4 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4] tracking-tight">
                 {activeConversation.contact.name}
               </h4>
               <p className="text-xs text-[#AEB7B3]">
@@ -1689,8 +1728,14 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               </p>
 
               <div className="flex items-center justify-center gap-1.5 pt-1">
-                <span className="bg-[#EAFBF2] text-[#1E7E49] text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  {activeConversation.channelType === 'whatsapp' ? 'WhatsApp Oficial' : 'Instagram Direct'}
+                <span className="bg-[#EAFBF2] dark:bg-[#1A2620] text-[#1E7E49] dark:text-[#45D483] text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activeConversation.channelType === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                    alt="Canal"
+                    className="w-3.5 h-3.5 object-contain"
+                  />
+                  <span>{activeConversation.channelType === 'whatsapp' ? 'WhatsApp Oficial' : 'Instagram Direct'}</span>
                 </span>
               </div>
             </div>

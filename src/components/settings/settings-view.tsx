@@ -89,9 +89,19 @@ export function SettingsView() {
       {/* Detalhes da Organização */}
       <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#151917] p-1 border border-[#262E2A]/60 shadow-sm flex items-center justify-center shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-m.png" alt="Logotipo Oficial" className="w-full h-full object-contain rounded-xl" />
+          <div className="flex items-center -space-x-2 shrink-0">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#151917] p-1 border border-[#262E2A]/60 shadow-sm flex items-center justify-center z-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-m.png" alt="Logotipo Oficial Moonky" className="w-full h-full object-contain rounded-xl" />
+            </div>
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-[#19201C] p-1.5 border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-wpp.png" alt="WhatsApp Oficial" className="w-full h-full object-contain" />
+            </div>
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-[#19201C] p-1.5 border border-[#E5E9E7] dark:border-[#262E2A] shadow-xs flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-insta.png" alt="Instagram Direct" className="w-full h-full object-contain" />
+            </div>
           </div>
           <div>
             <h2 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4] flex items-center gap-2">
@@ -99,7 +109,7 @@ export function SettingsView() {
               <span>Organização (Empresa)</span>
             </h2>
             <p className="text-xs text-[#6C7671] dark:text-[#AEB7B3] mt-0.5">
-              Logotipo oficial e configurações da sua instância Moonky
+              Logotipos oficiais integrados: Moonky + WhatsApp Oficial + Instagram Direct
             </p>
           </div>
         </div>

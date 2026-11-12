@@ -139,38 +139,62 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
             <thead className="bg-[#F7F9F8] dark:bg-[#1A201D] border-b border-[#E5E9E7] dark:border-[#262E2A] text-[#AEB7B3] uppercase text-[10px] font-bold tracking-wider">
               <tr>
                 <th className="py-3 px-6">Nome do Contato</th>
-                <th className="py-3 px-6">Telefone / WhatsApp</th>
-                <th className="py-3 px-6">Instagram Direct</th>
+                <th className="py-3 px-6">
+                  <div className="flex items-center gap-1.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo-wpp.png" alt="WhatsApp" className="w-3.5 h-3.5 object-contain" />
+                    <span>WhatsApp</span>
+                  </div>
+                </th>
+                <th className="py-3 px-6">
+                  <div className="flex items-center gap-1.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo-insta.png" alt="Instagram" className="w-3.5 h-3.5 object-contain" />
+                    <span>Instagram Direct</span>
+                  </div>
+                </th>
                 <th className="py-3 px-6">Estágio do Lead</th>
                 <th className="py-3 px-6">Tags</th>
                 <th className="py-3 px-6 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F1F3F2]">
+            <tbody className="divide-y divide-[#F1F3F2] dark:divide-[#262E2A]">
               {filteredContacts.map((contact) => (
-                <tr key={contact.id} className="hover:bg-[#F7F9F8] transition-colors">
+                <tr key={contact.id} className="hover:bg-[#F7F9F8] dark:hover:bg-[#1A201D] transition-colors">
                   <td className="py-3.5 px-6">
                     <div className="flex items-center gap-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={contact.avatarUrl}
                         alt={contact.name}
-                        className="w-8 h-8 rounded-full object-cover border border-[#E5E9E7]"
+                        className="w-8 h-8 rounded-full object-cover border border-[#E5E9E7] dark:border-[#262E2A]"
                       />
                       <div>
-                        <p className="font-bold text-[#252B28]">{contact.name}</p>
+                        <p className="font-bold text-[#252B28] dark:text-[#F3F5F4]">{contact.name}</p>
                         <p className="text-[10px] text-[#AEB7B3]">{contact.email || 'Sem e-mail cadastrado'}</p>
                       </div>
                     </div>
                   </td>
 
-                  <td className="py-3.5 px-6 font-medium text-[#252B28]">
-                    {contact.phone || <span className="text-[#AEB7B3]">—</span>}
+                  <td className="py-3.5 px-6 font-medium text-[#252B28] dark:text-[#F3F5F4]">
+                    {contact.phone ? (
+                      <div className="flex items-center gap-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-wpp.png" alt="WhatsApp" className="w-3.5 h-3.5 object-contain shrink-0" />
+                        <span>{contact.phone}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[#AEB7B3]">—</span>
+                    )}
                   </td>
 
-                  <td className="py-3.5 px-6 font-medium text-[#252B28]">
+                  <td className="py-3.5 px-6 font-medium text-[#252B28] dark:text-[#F3F5F4]">
                     {contact.instagramUsername ? (
-                      `@${contact.instagramUsername}`
+                      <div className="flex items-center gap-1.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-insta.png" alt="Instagram" className="w-3.5 h-3.5 object-contain shrink-0" />
+                        <span>@{contact.instagramUsername}</span>
+                      </div>
                     ) : (
                       <span className="text-[#AEB7B3]">—</span>
                     )}
@@ -185,7 +209,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
                           ? 'bg-blue-50 text-blue-700'
                           : contact.leadStatus === 'churned'
                           ? 'bg-rose-50 text-rose-700'
-                          : 'bg-[#F1F3F2] text-[#252B28]'
+                          : 'bg-[#F1F3F2] dark:bg-[#262E2A] text-[#252B28] dark:text-[#F3F5F4]'
                       }`}
                     >
                       {statusLabels[contact.leadStatus] || contact.leadStatus}
@@ -197,7 +221,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
                       {contact.tags.map((t) => (
                         <span
                           key={t.id}
-                          className="bg-[#F1F3F2] text-[#252B28] text-[9px] font-semibold px-2 py-0.5 rounded-full"
+                          className="bg-[#F1F3F2] dark:bg-[#262E2A] text-[#252B28] dark:text-[#F3F5F4] text-[9px] font-semibold px-2 py-0.5 rounded-full"
                         >
                           {t.name}
                         </span>
@@ -208,7 +232,7 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
                   <td className="py-3.5 px-6 text-right">
                     <button
                       onClick={() => handleOpenChat(contact)}
-                      className="bg-[#F1F3F2] hover:bg-[#252B28] hover:text-white text-[#252B28] font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 text-[11px]"
+                      className="bg-[#F1F3F2] dark:bg-[#262E2A] hover:bg-[#252B28] hover:text-white dark:hover:bg-[#45D483] dark:hover:text-[#0D1210] text-[#252B28] dark:text-[#F3F5F4] font-bold px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 text-[11px]"
                     >
                       <MessageSquare className="w-3 h-3 text-[#45D483]" />
                       <span>Abrir Chat</span>
@@ -225,39 +249,47 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-[#151917] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#E5E9E7] dark:border-[#262E2A]">
-            <h3 className="text-base font-bold text-[#252B28]">Adicionar Novo Contato</h3>
+            <h3 className="text-base font-bold text-[#252B28] dark:text-[#F3F5F4]">Adicionar Novo Contato</h3>
             <form onSubmit={handleCreateContact} className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Nome Completo</label>
+                <label className="font-bold text-[#252B28] dark:text-[#F3F5F4] block mb-1">Nome Completo</label>
                 <input
                   type="text"
                   placeholder="Ex: Maria Oliveira"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1A201D] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-[#F3F5F4] focus:outline-none focus:border-[#45D483]"
                   required
                 />
               </div>
 
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Número do WhatsApp</label>
+                <label className="font-bold text-[#252B28] dark:text-[#F3F5F4] flex items-center gap-1.5 mb-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-wpp.png" alt="WhatsApp" className="w-3.5 h-3.5 object-contain" />
+                  <span>Número do WhatsApp</span>
+                </label>
                 <input
                   type="text"
                   placeholder="+55 11 99999-9999"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1A201D] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-[#F3F5F4] focus:outline-none focus:border-[#45D483]"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-[#252B28] block mb-1">Usuário do Instagram</label>
+                <label className="font-bold text-[#252B28] dark:text-[#F3F5F4] flex items-center gap-1.5 mb-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-insta.png" alt="Instagram" className="w-3.5 h-3.5 object-contain" />
+                  <span>Usuário do Instagram</span>
+                </label>
                 <input
                   type="text"
                   placeholder="usuario (sem @)"
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
-                  className="w-full bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl px-3 py-2 text-xs text-[#252B28] focus:outline-none focus:border-[#45D483]"
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1A201D] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-[#F3F5F4] focus:outline-none focus:border-[#45D483]"
                 />
               </div>
 

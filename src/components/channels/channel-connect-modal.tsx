@@ -120,12 +120,22 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
         {/* Header */}
         <div className="p-6 pb-4 border-b border-[#F1F3F2] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-[#151917] p-0.5 border border-[#262E2A]/60 shadow-sm flex items-center justify-center shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain rounded-xl" />
+            <div className="flex items-center -space-x-1 shrink-0">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-[#151917] p-0.5 border border-[#262E2A]/60 shadow-sm flex items-center justify-center z-10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-m.png" alt="Moonky Logo" className="w-full h-full object-contain rounded-xl" />
+              </div>
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-1 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
+              </div>
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-[#151917] p-1 shadow-xs border border-[#E5E9E7] dark:border-[#262E2A] flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
+              </div>
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#252B28]">Conexão de Canais Oficiais</h2>
+              <h2 className="text-base font-bold text-[#252B28] dark:text-[#F3F6F4]">Conexão de Canais Oficiais</h2>
               <p className="text-xs text-[#AEB7B3]">
                 WhatsApp por QR Code & Instagram Oficial via Meta (WAME API)
               </p>
@@ -150,7 +160,8 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
                   : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-[#25D366]"></span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-wpp.png" alt="WhatsApp" className="w-4 h-4 object-contain" />
               <span>WhatsApp QR Code</span>
               {isWaConnected && (
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">
@@ -167,7 +178,8 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
                   : 'text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600"></span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-insta.png" alt="Instagram" className="w-4 h-4 object-contain" />
               <span>Instagram Oficial (Meta)</span>
               {isIgConnected && (
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">
@@ -274,8 +286,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center">
-                        <span className="text-sm font-bold text-[#252B28]">M</span>
+                      <div className="w-10 h-10 rounded-full bg-white shadow-md p-1.5 flex items-center justify-center border border-emerald-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-wpp.png" alt="WhatsApp" className="w-full h-full object-contain" />
                       </div>
                     </div>
                   </div>
@@ -327,8 +340,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
         {activeTab === 'instagram' && (
           <div className="p-6 space-y-6">
             <div className="p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/30 dark:via-pink-950/30 dark:to-amber-950/30 rounded-2xl border border-pink-100 dark:border-pink-900/40 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 text-white flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#19201C] p-1 shadow-xs border border-pink-200 dark:border-pink-900/60 flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
               </div>
               <div className="text-xs">
                 <p className="font-bold text-[#252B28]">Parceria Oficial Meta · Meta Business Partner</p>
@@ -340,8 +354,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
 
             {isIgConnected ? (
               <div className="bg-[#FAFBFB] border border-[#E5E9E7] rounded-3xl p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 text-white mx-auto flex items-center justify-center shadow-sm">
-                  <CheckCircle2 className="w-8 h-8" />
+                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#19201C] p-2 mx-auto flex items-center justify-center shadow-md border border-[#E5E9E7] dark:border-[#262E2A]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[#252B28]">Instagram Direct Oficial Ativo</h3>
@@ -371,8 +386,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
               </div>
             ) : (
               <div className="space-y-4 text-center p-6 bg-[#FAFBFB] rounded-3xl border border-[#E5E9E7]">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 text-white mx-auto flex items-center justify-center shadow-md">
-                  <Smartphone className="w-7 h-7" />
+                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#19201C] p-2 mx-auto flex items-center justify-center shadow-md border border-[#E5E9E7] dark:border-[#262E2A]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-insta.png" alt="Instagram" className="w-full h-full object-contain" />
                 </div>
 
                 <div>
@@ -394,7 +410,9 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
                       </>
                     ) : (
                       <>
-                        <ExternalLink className="w-4 h-4" /> Conectar com a Meta (Instagram Oficial)
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-insta.png" alt="Instagram" className="w-4 h-4 object-contain" />
+                        <span>Conectar com a Meta (Instagram Oficial)</span>
                       </>
                     )}
                   </button>

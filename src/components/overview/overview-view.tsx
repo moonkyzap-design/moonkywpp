@@ -203,11 +203,13 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
             </div>
             <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#45D483]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-wpp.png" alt="WhatsApp" className="w-3.5 h-3.5 object-contain" />
                 <span className="text-[#252B28] dark:text-gray-200">WhatsApp</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-insta.png" alt="Instagram" className="w-3.5 h-3.5 object-contain" />
                 <span className="text-[#252B28] dark:text-gray-200">Instagram</span>
               </div>
             </div>
@@ -298,7 +300,15 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
               {analytics.channelDistribution.map((ch, idx) => (
                 <div key={idx} className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-[#252B28]">{ch.channel}</span>
+                    <span className="text-[#252B28] dark:text-[#F3F6F4] flex items-center gap-1.5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={ch.channel.toLowerCase().includes('what') ? '/logo-wpp.png' : '/logo-insta.png'}
+                        alt={ch.channel}
+                        className="w-3.5 h-3.5 object-contain"
+                      />
+                      <span>{ch.channel}</span>
+                    </span>
                     <span className="text-[#6C7671]">
                       {ch.count} ({ch.percentage}%)
                     </span>
