@@ -104,39 +104,53 @@ export function AnalyticsView() {
       {/* Grid: Volume Diário & Divisão IA vs Humano */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Distribuição Diária */}
-        <div className="bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-[#252B28]">Volume Diário de Mensagens Recebidas</h2>
+        <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-5 sm:p-6 shadow-xs space-y-4 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-[#252B28] dark:text-white">Volume Diário de Mensagens Recebidas</h2>
             <div className="flex items-center gap-3 text-xs font-semibold">
-              <span className="flex items-center gap-1 text-[#252B28]">
+              <span className="flex items-center gap-1 text-[#252B28] dark:text-gray-200">
                 <span className="w-2 h-2 rounded-full bg-[#45D483]" /> WhatsApp
               </span>
-              <span className="flex items-center gap-1 text-[#252B28]">
+              <span className="flex items-center gap-1 text-[#252B28] dark:text-gray-200">
                 <span className="w-2 h-2 rounded-full bg-[#3B82F6]" /> Instagram
               </span>
             </div>
           </div>
 
-          <div className="h-52 flex items-end justify-between gap-3 pt-6 border-b border-[#F1F3F2]">
-            {analytics.volumeByDay.map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                <div className="w-full flex items-end justify-center gap-1 h-44">
-                  <div
-                    style={{ height: `${(d.whatsapp / 240) * 100}%` }}
-                    className="w-5 bg-[#45D483] rounded-t-sm"
-                  />
-                  <div
-                    style={{ height: `${(d.instagram / 240) * 100}%` }}
-                    className="w-5 bg-[#3B82F6] rounded-t-sm"
-                  />
+          <div className="h-52 flex items-end justify-between gap-1 sm:gap-2 pt-6 border-b border-[#F1F3F2] dark:border-[#262E2A]">
+            {analytics.volumeByDay.map((d, i) => {
+              const maxVal = Math.max(...analytics.volumeByDay.map((item) => Math.max(item.whatsapp, item.instagram)), 700);
+              const waHeight = Math.min(Math.round((d.whatsapp / maxVal) * 100), 100);
+              const igHeight = Math.min(Math.round((d.instagram / maxVal) * 100), 100);
+              const dayTotal = d.whatsapp + d.instagram;
+
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end min-w-0">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-[#6C7671] dark:text-[#AEB7B3] mb-1 tabular-nums">
+                    {dayTotal}
+                  </span>
+                  <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-36">
+                    <div
+                      style={{ height: `${waHeight}%` }}
+                      className="w-2.5 sm:w-3.5 md:w-4 max-w-[18px] bg-[#45D483] rounded-t-sm"
+                      title={`${d.whatsapp} WhatsApp`}
+                    />
+                    <div
+                      style={{ height: `${igHeight}%` }}
+                      className="w-2.5 sm:w-3.5 md:w-4 max-w-[18px] bg-[#3B82F6] rounded-t-sm"
+                      title={`${d.instagram} Instagram`}
+                    />
+                  </div>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-[#6C7671] dark:text-[#AEB7B3] mt-2">
+                    {dayTranslation[d.day] || d.day}
+                  </span>
                 </div>
-                <span className="text-[11px] font-bold text-[#6C7671]">{dayTranslation[d.day] || d.day}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <p className="text-xs text-[#AEB7B3] text-center">
-            Total semanal de mensagens processadas: 1.424
+          <p className="text-xs text-[#AEB7B3] text-center pt-1">
+            Total semanal de mensagens processadas: {analytics.volumeByDay.reduce((a, b) => a + b.whatsapp + b.instagram, 0).toLocaleString('pt-BR')}
           </p>
         </div>
 

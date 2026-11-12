@@ -26,6 +26,16 @@ interface OverviewViewProps {
 export function OverviewView({ onNavigate }: OverviewViewProps) {
   const { analytics, conversations, channels } = useMoonky();
 
+  // Escala dinâmica calculada para garantir que os dados fiquem 100% contidos no card
+  const maxVolumeVal = Math.max(
+    ...analytics.volumeByDay.map((item) => Math.max(item.whatsapp, item.instagram)),
+    700
+  );
+  const weeklyTotalVolume = analytics.volumeByDay.reduce(
+    (acc, curr) => acc + curr.whatsapp + curr.instagram,
+    0
+  );
+
   const metrics = [
     {
       label: 'Total de Conversas',
@@ -145,64 +155,103 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
 
       {/* Grid de Volume Visual & Canais */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico de Volume Semanal */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E5E9E7] p-6 shadow-xs space-y-6">
-          <div className="flex items-center justify-between">
+        {/* Gráfico de Volume Semanal Responsivo e Contido */}
+        <div className="lg:col-span-2 bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-6 overflow-hidden">
+          {/* Cabeçalho do Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-[#252B28]">Volume de Conversas</h2>
-              <p className="text-xs text-[#AEB7B3] mt-0.5">Tráfego dos últimos 7 dias dividido por canal</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-bold text-[#252B28] dark:text-white">Volume de Conversas</h2>
+                <span className="bg-[#EAFBF2] dark:bg-[#45D483]/15 text-[#1E7E49] dark:text-[#45D483] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                  7 Dias
+                </span>
+              </div>
+              <p className="text-xs text-[#AEB7B3] mt-0.5">Tráfego diário consolidado por canal oficial</p>
             </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#45D483]" />
-                <span className="text-[#252B28]">WhatsApp</span>
+                <span className="text-[#252B28] dark:text-gray-200">WhatsApp</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
-                <span className="text-[#252B28]">Instagram</span>
+                <span className="text-[#252B28] dark:text-gray-200">Instagram</span>
               </div>
             </div>
           </div>
 
-          {/* Gráfico de Barras */}
-          <div className="h-48 flex items-end justify-between gap-4 pt-4 border-b border-[#F1F3F2]">
-            {analytics.volumeByDay.map((item, i) => {
-              const maxVal = 260;
-              const waHeight = (item.whatsapp / maxVal) * 100;
-              const igHeight = (item.instagram / maxVal) * 100;
+          {/* Gráfico de Barras com Escala Proporcional Contida */}
+          <div className="relative pt-6 pb-2">
+            {/* Linhas de Grade de Fundo Sutis */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7 pt-6">
+              <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">600</span>
+              </div>
+              <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">400</span>
+              </div>
+              <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">200</span>
+              </div>
+              <div className="w-full border-b border-[#E5E9E7] dark:border-[#262E2A]" />
+            </div>
 
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                  <div className="w-full flex items-end justify-center gap-1.5 h-40">
-                    {/* Barra WhatsApp */}
-                    <div
-                      style={{ height: `${waHeight}%` }}
-                      className="w-4 bg-[#45D483] rounded-t-md hover:opacity-90 transition-all cursor-pointer relative group"
-                    >
-                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#252B28] text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {item.whatsapp} WA
-                      </span>
+            {/* Colunas do Gráfico */}
+            <div className="relative h-44 sm:h-48 flex items-end justify-between gap-1 sm:gap-2 z-0">
+              {analytics.volumeByDay.map((item, i) => {
+                const total = item.whatsapp + item.instagram;
+                const waHeight = Math.min(Math.round((item.whatsapp / maxVolumeVal) * 100), 100);
+                const igHeight = Math.min(Math.round((item.instagram / maxVolumeVal) * 100), 100);
+
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center justify-end h-full min-w-0">
+                    {/* Dado Numérico Total Diário (Responsivo e Contido) */}
+                    <span className="text-[9px] sm:text-[10px] font-bold text-[#6C7671] dark:text-[#AEB7B3] mb-1.5 shrink-0 tabular-nums">
+                      {total}
+                    </span>
+
+                    {/* Barras Lado a Lado com Limitação de Altura Estrita */}
+                    <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-32 sm:h-36">
+                      {/* Barra WhatsApp */}
+                      <div
+                        style={{ height: `${waHeight}%` }}
+                        className="w-2.5 sm:w-3.5 md:w-4 max-w-[18px] bg-[#45D483] rounded-t-sm hover:opacity-90 transition-all cursor-pointer relative group shrink-0"
+                      >
+                        <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#252B28] text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-md">
+                          {item.whatsapp} WA
+                        </span>
+                      </div>
+
+                      {/* Barra Instagram */}
+                      <div
+                        style={{ height: `${igHeight}%` }}
+                        className="w-2.5 sm:w-3.5 md:w-4 max-w-[18px] bg-[#3B82F6] rounded-t-sm hover:opacity-90 transition-all cursor-pointer relative group shrink-0"
+                      >
+                        <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#252B28] text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-md">
+                          {item.instagram} IG
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Barra Instagram */}
-                    <div
-                      style={{ height: `${igHeight}%` }}
-                      className="w-4 bg-[#3B82F6] rounded-t-md hover:opacity-90 transition-all cursor-pointer relative group"
-                    >
-                      <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#252B28] text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {item.instagram} IG
-                      </span>
-                    </div>
+                    {/* Rótulo do Dia da Semana */}
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-[#6C7671] dark:text-[#AEB7B3] mt-2 shrink-0">
+                      {item.day}
+                    </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-[#6C7671]">{item.day}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-[#6C7671] pt-2">
-            <span>Horário de pico: 14:00 - 17:30 (Horário de Brasília)</span>
-            <span className="text-[#252B28] font-bold">Total nesta semana: 1.424 mensagens</span>
+          {/* Rodapé Responsivo */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#6C7671] dark:text-[#AEB7B3] pt-3 border-t border-[#F1F3F2] dark:border-[#262E2A]">
+            <span className="flex items-center gap-1.5 truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#45D483] shrink-0" />
+              <span>Horário de pico: <strong>14:00 - 17:30</strong> (Horário de Brasília)</span>
+            </span>
+            <span className="text-[#252B28] dark:text-white font-bold shrink-0">
+              Total na semana: {weeklyTotalVolume.toLocaleString('pt-BR')} mensagens
+            </span>
           </div>
         </div>
 
