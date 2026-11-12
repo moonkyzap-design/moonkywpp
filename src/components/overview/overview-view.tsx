@@ -406,7 +406,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
         {/* Status dos Gateways */}
         <div className="bg-white dark:bg-[#151917] rounded-2xl border border-[#E5E9E7] dark:border-[#262E2A] p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-[#252B28]">Gateways de Canais</h2>
+            <h2 className="text-sm font-bold text-[#252B28] dark:text-[#F3F6F4]">Gateways de Canais</h2>
             <button
               onClick={() => onNavigate('integrations')}
               className="text-xs font-semibold text-[#45D483] hover:underline"
@@ -419,27 +419,26 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
             {channels.map((ch) => (
               <div
                 key={ch.id}
-                className="p-3 bg-[#F7F9F8] border border-[#E5E9E7] rounded-xl flex items-center justify-between text-xs"
+                className="p-3 bg-[#F7F9F8] dark:bg-[#1A201D] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl flex items-center justify-between text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs ${
-                      ch.type === 'whatsapp'
-                        ? 'bg-[#25D366]'
-                        : 'bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600'
-                    }`}
-                  >
-                    {ch.type === 'whatsapp' ? 'WA' : 'IG'}
+                  <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#1D2320] p-1.5 border border-[#E5E9E7] dark:border-[#2A342E] shadow-xs flex items-center justify-center shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ch.type === 'whatsapp' ? '/logo-wpp.png' : '/logo-insta.png'}
+                      alt={ch.type === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div>
-                    <p className="font-bold text-[#252B28]">{ch.name}</p>
+                    <p className="font-bold text-[#252B28] dark:text-[#F3F6F4]">{ch.name}</p>
                     <p className="text-[10px] text-[#AEB7B3]">
                       {ch.isOfficial ? 'Meta Cloud API' : 'QR Code'} • {ch.lastSyncAt}
                     </p>
                   </div>
                 </div>
 
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#1E7E49] bg-[#EAFBF2] px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#1E7E49] dark:text-[#45D483] bg-[#EAFBF2] dark:bg-[#1A2E22] px-2 py-0.5 rounded-full border border-transparent dark:border-[#265337]">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#45D483]" />
                   Ativo
                 </span>
@@ -447,7 +446,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
             ))}
           </div>
 
-          <div className="p-3 bg-[#F1F3F2] rounded-xl text-[11px] text-[#6C7671] leading-relaxed">
+          <div className="p-3 bg-[#F1F3F2] dark:bg-[#1A201D] border border-transparent dark:border-[#262E2A] rounded-xl text-[11px] text-[#6C7671] dark:text-[#AEB7B3] leading-relaxed">
             Todas as mensagens recebidas são processadas no servidor com proteção de idempotência no padrão oficial Meta da WAME.
           </div>
         </div>
