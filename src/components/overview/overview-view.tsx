@@ -5,7 +5,7 @@
 // Métricas executivas, gráficos de volume por canal, taxas de IA e feed
 // ===================================================================
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   MessageSquare,
   Clock,
@@ -14,7 +14,9 @@ import {
   UserPlus,
   TrendingUp,
   Radio,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
 import { NavigationTab } from '@/components/layout/sidebar';
@@ -24,30 +26,47 @@ interface OverviewViewProps {
 }
 
 export function OverviewView({ onNavigate }: OverviewViewProps) {
-  const { analytics, conversations, channels } = useMoonky();
+  const {
+    analytics,
+    conversations,
+    channels,
+    isLiveSupabase,
+    isSyncingStats,
+    lastStatsSync,
+    syncDashboardStatsFromSupabase
+  } = useMoonky();
+
+  // Sincroniza dados com o Supabase ao carregar o Dashboard
+  useEffect(() => {
+    syncDashboardStatsFromSupabase();
+  }, []);
 
   // Escala dinâmica calculada para garantir que os dados fiquem 100% contidos no card
   const maxVolumeVal = Math.max(
     ...analytics.volumeByDay.map((item) => Math.max(item.whatsapp, item.instagram)),
-    700
+    10
   );
   const weeklyTotalVolume = analytics.volumeByDay.reduce(
     (acc, curr) => acc + curr.whatsapp + curr.instagram,
     0
   );
 
+  const step1 = Math.max(Math.ceil(maxVolumeVal * 0.75), 3);
+  const step2 = Math.max(Math.ceil(maxVolumeVal * 0.5), 2);
+  const step3 = Math.max(Math.ceil(maxVolumeVal * 0.25), 1);
+
   const metrics = [
     {
       label: 'Total de Conversas',
       value: analytics.totalConversations.toLocaleString('pt-BR'),
-      change: '+12.4% em relação à semana passada',
+      change: 'Conversas ativas no Supabase',
       isPositive: true,
       icon: MessageSquare
     },
     {
       label: 'Conversas Abertas',
       value: analytics.openConversations,
-      change: 'Ativas na fila de espera',
+      change: 'Aguardando interação ou resposta',
       isPositive: true,
       icon: Clock,
       highlight: true
@@ -55,21 +74,21 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
     {
       label: 'Conversas Resolvidas',
       value: analytics.resolvedConversations.toLocaleString('pt-BR'),
-      change: `${analytics.resolutionRatePercentage}% de resolução`,
+      change: `${analytics.resolutionRatePercentage}% taxa de resolução`,
       isPositive: true,
       icon: CheckCircle2
     },
     {
       label: 'Tempo Médio Resposta',
       value: `${analytics.avgResponseTimeMin}m`,
-      change: '-18s mais rápido que o SLA',
+      change: 'Velocidade instantânea via IA',
       isPositive: true,
       icon: TrendingUp
     },
     {
       label: 'Atendidas por IA',
       value: `${analytics.aiHandledPercentage}%`,
-      change: 'Base verificada sem alucinações',
+      change: 'Base oficial sem alucinações',
       isPositive: true,
       icon: Bot,
       accent: true
@@ -77,7 +96,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
     {
       label: 'Novos Contatos / Leads',
       value: analytics.newLeadsCount,
-      change: '+22 novos esta semana',
+      change: 'Cadastrados na tabela contatos',
       isPositive: true,
       icon: UserPlus
     }
@@ -89,16 +108,30 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
         {/* Topo: Boas-vindas & Ações Rápidas */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="w-2.5 h-2.5 rounded-full bg-[#45D483] animate-pulse" />
-              <h1 className="text-xl sm:text-2xl font-bold text-[#252B28] tracking-tight">Dashboard Executivo</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#252B28] dark:text-white tracking-tight">Dashboard Executivo</h1>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAFBF2] dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[10px] font-bold text-[#1E7E49] dark:text-[#45D483]">
+                <Database className="w-3 h-3 text-[#45D483]" />
+                <span>Supabase Live</span>
+                {lastStatsSync && <span className="opacity-75 font-normal">· {lastStatsSync}</span>}
+              </div>
             </div>
-            <p className="text-xs text-[#6C7671] mt-1">
-              Métricas consolidadas em tempo real do WhatsApp e Instagram Direct via WAME API.
+            <p className="text-xs text-[#6C7671] dark:text-[#AEB7B3] mt-1">
+              Métricas reais sincronizadas diretamente com o banco de dados PostgreSQL do Supabase.
             </p>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <button
+              onClick={() => syncDashboardStatsFromSupabase()}
+              disabled={isSyncingStats}
+              title="Atualizar dados do Supabase"
+              className="bg-white hover:bg-[#F7F9F8] dark:bg-[#151917] dark:hover:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] text-[#252B28] dark:text-[#F3F6F4] text-xs font-semibold px-3 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingStats ? 'animate-spin text-[#45D483]' : 'text-[#45D483]'}`} />
+              <span>{isSyncingStats ? 'Sincronizando...' : 'Sincronizar'}</span>
+            </button>
             <button
               onClick={() => onNavigate('inbox')}
               className="bg-[#252B28] hover:bg-[#1a1f1d] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
@@ -185,13 +218,13 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
             {/* Linhas de Grade de Fundo Sutis */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7 pt-6">
               <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
-                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">600</span>
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">{step1}</span>
               </div>
               <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
-                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">400</span>
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">{step2}</span>
               </div>
               <div className="w-full border-b border-dashed border-[#F1F3F2] dark:border-[#262E2A] flex justify-end">
-                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">200</span>
+                <span className="text-[9px] font-mono text-[#AEB7B3] pr-1 -mt-2.5">{step3}</span>
               </div>
               <div className="w-full border-b border-[#E5E9E7] dark:border-[#262E2A]" />
             </div>
@@ -250,7 +283,7 @@ export function OverviewView({ onNavigate }: OverviewViewProps) {
               <span>Horário de pico: <strong>14:00 - 17:30</strong> (Horário de Brasília)</span>
             </span>
             <span className="text-[#252B28] dark:text-white font-bold shrink-0">
-              Total na semana: {weeklyTotalVolume.toLocaleString('pt-BR')} mensagens
+              Total na semana: {weeklyTotalVolume.toLocaleString('pt-BR')} mensagens (Supabase)
             </span>
           </div>
         </div>

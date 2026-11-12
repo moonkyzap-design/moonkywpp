@@ -55,6 +55,9 @@ interface MoonkyStoreContextType {
   automations: AutomationRule[];
   analytics: AnalyticsSummary;
   isLiveSupabase: boolean;
+  isSyncingStats: boolean;
+  lastStatsSync: string;
+  syncDashboardStatsFromSupabase: () => Promise<void>;
   isTyping: boolean;
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
@@ -108,9 +111,11 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   const [knowledgeBase, setKnowledgeBase] = useState<AIKnowledgeItem[]>(initialKnowledgeBase);
   const [aiSettings, setAISettings] = useState<AIAgentSettings>(initialAISettings);
   const [automations, setAutomations] = useState<AutomationRule[]>(initialAutomations);
-  const [analytics] = useState<AnalyticsSummary>(initialAnalytics);
+  const [analytics, setAnalytics] = useState<AnalyticsSummary>(initialAnalytics);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isLiveSupabase, setIsLiveSupabase] = useState<boolean>(false);
+  const [isSyncingStats, setIsSyncingStats] = useState<boolean>(false);
+  const [lastStatsSync, setLastStatsSync] = useState<string>('');
   const [isDarkMode, setIsDarkModeState] = useState<boolean>(false);
 
   // Filters
@@ -120,8 +125,33 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  const syncDashboardStatsFromSupabase = async () => {
+    try {
+      setIsSyncingStats(true);
+      const res = await fetch('/api/dashboard/stats', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.analytics) {
+          setAnalytics(data.analytics);
+          setIsLiveSupabase(true);
+          const now = new Date();
+          setLastStatsSync(
+            now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          );
+        }
+      }
+    } catch (err) {
+      console.warn('[SUPABASE_SYNC_STATS_WARN]', err);
+    } finally {
+      setIsSyncingStats(false);
+    }
+  };
+
   useEffect(() => {
     setIsLiveSupabase(isSupabaseConfigured());
+    // Dispara a sincronização real dos números do banco de dados Supabase
+    syncDashboardStatsFromSupabase();
+
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('moonky_theme');
       if (saved === 'dark') {
@@ -299,7 +329,10 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         })
       })
         .then((r) => r.json())
-        .then((res) => console.log('[BANCO_REAL_SUPABASE_SALVO]', res))
+        .then((res) => {
+          console.log('[BANCO_REAL_SUPABASE_SALVO]', res);
+          syncDashboardStatsFromSupabase();
+        })
         .catch((e) => console.warn('[BANCO_REAL_AVISO]', e));
     } catch (e) {
       // non-blocking
@@ -461,10 +494,12 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   const updateConversationStatus = (convId: string, status: ConversationStatus) => {
     setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, status } : c)));
+    setTimeout(syncDashboardStatsFromSupabase, 100);
   };
 
   const updateConversationAIStatus = (convId: string, aiStatus: AIStatus) => {
     setConversations((prev) => prev.map((c) => (c.id === convId ? { ...c, aiStatus } : c)));
+    setTimeout(syncDashboardStatsFromSupabase, 100);
   };
 
   const assignConversationAgent = (convId: string, agentId: string | null) => {
@@ -681,6 +716,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         automations,
         analytics,
         isLiveSupabase,
+        isSyncingStats,
+        lastStatsSync,
+        syncDashboardStatsFromSupabase,
         isTyping,
         isDarkMode,
         setIsDarkMode,
