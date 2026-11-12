@@ -111,7 +111,7 @@ const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
 
 export function MoonkyStoreProvider({ children }: { children: React.ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>('conv-mariana-01');
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>(initialMessages);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
@@ -156,10 +156,53 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  const syncConversationsFromSupabase = async () => {
+    try {
+      const res = await fetch('/api/conversations/list', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          if (Array.isArray(data.conversations) && data.conversations.length > 0) {
+            setConversations(data.conversations);
+            setActiveConversationId(data.conversations[0].id);
+          } else {
+            setConversations([]);
+            setActiveConversationId(null);
+          }
+          if (Array.isArray(data.channels) && data.channels.length > 0) {
+            setChannels((prev) =>
+              prev.map((ch) => {
+                const dbMatch = data.channels.find(
+                  (c: any) =>
+                    (ch.type === 'whatsapp' && c.type === 'whatsapp') ||
+                    (ch.type === 'instagram' && c.type === 'instagram')
+                );
+                if (dbMatch) {
+                  return {
+                    ...ch,
+                    status: dbMatch.status || ch.status,
+                    instanceKey: dbMatch.instance_key || ch.instanceKey,
+                    phoneNumber: dbMatch.phone_number || ch.phoneNumber,
+                    instagramUsername: dbMatch.instagram_username || ch.instagramUsername,
+                    lastSyncAt: dbMatch.last_sync_at || ch.lastSyncAt
+                  };
+                }
+                return ch;
+              })
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[CONVERSATIONS_SYNC_WARN]', err);
+    }
+  };
+
   useEffect(() => {
     setIsLiveSupabase(isSupabaseConfigured());
-    // Dispara a sincronização real dos números do banco de dados Supabase
+    // Sincroniza estatísticas e conversas reais do Supabase
     syncDashboardStatsFromSupabase();
+    syncConversationsFromSupabase();
 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('moonky_theme');
@@ -174,24 +217,15 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         document.documentElement.classList.add('dark');
       }
 
-      // Carregar cache persistente de conversas e mensagens
+      // Limpar caches legados de demonstração para garantir dados 100% reais e limpos
       try {
-        const cachedMsgs = localStorage.getItem('moonky_messages_v4');
-        if (cachedMsgs) {
-          const parsed = JSON.parse(cachedMsgs);
-          if (parsed && typeof parsed === 'object') {
-            setMessages((prev) => ({ ...prev, ...parsed }));
-          }
-        }
-        const cachedConvs = localStorage.getItem('moonky_conversations_v4');
-        if (cachedConvs) {
-          const parsed = JSON.parse(cachedConvs);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setConversations(parsed);
-          }
-        }
+        localStorage.removeItem('moonky_messages_v4');
+        localStorage.removeItem('moonky_conversations_v4');
+        localStorage.removeItem('moonky_messages_v3');
+        localStorage.removeItem('moonky_conversations_v3');
+        localStorage.removeItem('moonky_contacts_v4');
       } catch (err) {
-        console.error('Failed to load local storage cache', err);
+        console.error('Failed to clear legacy local storage cache', err);
       }
     }
   }, []);
@@ -213,8 +247,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     setIsDarkMode(!isDarkMode);
   };
 
-  const activeConversation =
-    conversations.find((c) => c.id === activeConversationId) || conversations[0] || null;
+  const activeConversation = activeConversationId
+    ? conversations.find((c) => c.id === activeConversationId) || null
+    : null;
 
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
@@ -618,6 +653,22 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   const updateChannel = (channelId: string, updated: Partial<Channel>) => {
     setChannels((prev) => prev.map((ch) => (ch.id === channelId ? { ...ch, ...updated } : ch)));
+    if (supabase && isSupabaseConfigured()) {
+      const dbChannelId = channelId.includes('wa')
+        ? '22222222-2222-4222-8222-222222222222'
+        : channelId.includes('ig')
+        ? '33333333-3333-4333-8333-333333333333'
+        : channelId;
+      const dbPayload: Record<string, unknown> = {};
+      if (updated.status) dbPayload.status = updated.status;
+      if (updated.instanceKey !== undefined) dbPayload.instance_key = updated.instanceKey;
+      if (updated.phoneNumber !== undefined) dbPayload.phone_number = updated.phoneNumber;
+      if (updated.instagramUsername !== undefined) dbPayload.instagram_username = updated.instagramUsername;
+      if (updated.lastSyncAt !== undefined) dbPayload.last_sync_at = new Date().toISOString();
+      if (Object.keys(dbPayload).length > 0) {
+        supabase.from('channels').update(dbPayload).eq('id', dbChannelId).then();
+      }
+    }
   };
 
   /**

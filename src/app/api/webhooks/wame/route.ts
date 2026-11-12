@@ -1,10 +1,18 @@
 // ===================================================================
 // WAME WEBHOOK INGESTION ENDPOINT
 // Standard Meta Cloud API envelope parser for WhatsApp & Instagram
+// Persists real inbound messages, creates contacts & conversations in Supabase
 // ===================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/client';
 import { WameWebhookPayload } from '@/types/wame';
+import { randomUUID } from 'crypto';
+
+const ORG_UUID = '11111111-1111-4111-8111-111111111111';
+const WA_CHANNEL_UUID = '22222222-2222-4222-8222-222222222222';
+const IG_CHANNEL_UUID = '33333333-3333-4333-8333-333333333333';
 
 // In-memory idempotency cache for deduplication
 const processedEvents = new Set<string>();
@@ -26,8 +34,25 @@ export async function POST(req: NextRequest) {
     const provider = payload.provider || 'whatsapp'; // 'whatsapp' | 'instagram' | 'messenger'
     const isOfficial = payload.official ?? true;
     const instanceId = payload.instance;
+    const channelId = provider === 'instagram' ? IG_CHANNEL_UUID : WA_CHANNEL_UUID;
 
-    // Process entries and message changes
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 1. Atualizar canal para conectado e registrar última sincronização
+    try {
+      await supabase
+        .from('channels')
+        .update({
+          status: 'connected',
+          instance_key: instanceId || 'WAME_PROD_INSTANCE_8941',
+          last_sync_at: new Date().toISOString()
+        })
+        .eq('id', channelId);
+    } catch (e) {
+      console.warn('[WAME_CHANNEL_UPDATE_WARN]', e);
+    }
+
+    // 2. Processar entradas e mensagens
     for (const entry of payload.entry || []) {
       for (const change of entry.changes || []) {
         if (change.field === 'messages') {
@@ -43,14 +68,24 @@ export async function POST(req: NextRequest) {
               continue;
             }
             processedEvents.add(idempotencyKey);
-            // Limit cache size
             if (processedEvents.size > 5000) {
               const first = processedEvents.values().next().value;
               if (first) processedEvents.delete(first);
             }
 
             const senderIdentifier = msg.from_user_id || msg.from;
-            const textContent = msg.text?.body || (msg.type === 'image' ? '[Photo]' : '[Media]');
+            const textContent =
+              msg.text?.body ||
+              (msg.type === 'image'
+                ? '📷 Foto'
+                : msg.type === 'audio'
+                ? '🎙 Mensagem de voz'
+                : msg.type === 'video'
+                ? '🎥 Vídeo'
+                : msg.type === 'document'
+                ? '📄 Documento'
+                : '[Mensagem]');
+
             const contactProfile = value.contacts?.find(
               (c) => c.wa_id === msg.from || c.user_id === msg.from_user_id
             );
@@ -59,6 +94,139 @@ export async function POST(req: NextRequest) {
             console.log(
               `[WAME Inbound] Provider: ${provider} | Official: ${isOfficial} | From: ${contactName} (${senderIdentifier}): "${textContent}"`
             );
+
+            // Persistir no Supabase:
+            try {
+              // 2.1 Encontrar ou criar Contato
+              let contactId: string | null = null;
+              if (provider === 'instagram') {
+                const { data: existingContact } = await supabase
+                  .from('contacts')
+                  .select('id')
+                  .eq('organization_id', ORG_UUID)
+                  .eq('instagram_username', senderIdentifier)
+                  .maybeSingle();
+
+                if (existingContact?.id) {
+                  contactId = existingContact.id;
+                } else {
+                  const newContactId = randomUUID();
+                  const { data: createdContact } = await supabase
+                    .from('contacts')
+                    .insert({
+                      id: newContactId,
+                      organization_id: ORG_UUID,
+                      name: contactName,
+                      instagram_username: senderIdentifier,
+                      lead_status: 'lead',
+                      avatar_url:
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                    })
+                    .select('id')
+                    .single();
+                  contactId = createdContact?.id || newContactId;
+                }
+              } else {
+                const { data: existingContact } = await supabase
+                  .from('contacts')
+                  .select('id')
+                  .eq('organization_id', ORG_UUID)
+                  .eq('phone', senderIdentifier)
+                  .maybeSingle();
+
+                if (existingContact?.id) {
+                  contactId = existingContact.id;
+                } else {
+                  const newContactId = randomUUID();
+                  const { data: createdContact } = await supabase
+                    .from('contacts')
+                    .insert({
+                      id: newContactId,
+                      organization_id: ORG_UUID,
+                      name: contactName,
+                      phone: senderIdentifier,
+                      lead_status: 'lead',
+                      avatar_url:
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                    })
+                    .select('id')
+                    .single();
+                  contactId = createdContact?.id || newContactId;
+                }
+              }
+
+              // 2.2 Encontrar ou criar Conversa
+              let conversationId: string | null = null;
+              if (contactId) {
+                const { data: existingConv } = await supabase
+                  .from('conversations')
+                  .select('id, unread_count')
+                  .eq('organization_id', ORG_UUID)
+                  .eq('channel_id', channelId)
+                  .eq('contact_id', contactId)
+                  .maybeSingle();
+
+                if (existingConv?.id) {
+                  conversationId = existingConv.id;
+                  await supabase
+                    .from('conversations')
+                    .update({
+                      last_message_preview: textContent,
+                      last_message_at: new Date().toISOString(),
+                      unread_count: (existingConv.unread_count || 0) + 1
+                    })
+                    .eq('id', existingConv.id);
+                } else {
+                  const newConvId = randomUUID();
+                  const { data: createdConv } = await supabase
+                    .from('conversations')
+                    .insert({
+                      id: newConvId,
+                      organization_id: ORG_UUID,
+                      channel_id: channelId,
+                      contact_id: contactId,
+                      status: 'open',
+                      priority: 'medium',
+                      ai_enabled: true,
+                      ai_status: 'active',
+                      unread_count: 1,
+                      last_message_preview: textContent,
+                      last_message_at: new Date().toISOString()
+                    })
+                    .select('id')
+                    .single();
+                  conversationId = createdConv?.id || newConvId;
+                }
+              }
+
+              // 2.3 Inserir Mensagem
+              if (conversationId) {
+                await supabase.from('messages').insert({
+                  id: randomUUID(),
+                  organization_id: ORG_UUID,
+                  conversation_id: conversationId,
+                  channel_id: channelId,
+                  sender_type: 'contact',
+                  external_id: msg.id || null,
+                  content: textContent,
+                  message_type: msg.type || 'text',
+                  media_url:
+                    (msg as any).image?.link ||
+                    (msg as any).audio?.link ||
+                    (msg as any).video?.link ||
+                    (msg as any).document?.link ||
+                    null,
+                  delivery_status: 'delivered',
+                  metadata: {
+                    rawTimestamp: msg.timestamp,
+                    wameInstance: instanceId,
+                    from: senderIdentifier
+                  }
+                });
+              }
+            } catch (dbErr) {
+              console.error('[WAME_SUPABASE_PERSIST_ERROR]', dbErr);
+            }
           }
 
           // Status updates (sent, delivered, read)

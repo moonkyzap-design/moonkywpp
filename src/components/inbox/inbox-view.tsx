@@ -43,7 +43,13 @@ import {
   Trash2,
   Maximize2,
   Eye,
-  Film
+  Film,
+  QrCode,
+  Radio,
+  Copy,
+  Check,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
 import { currentUser } from '@/lib/mock-data';
@@ -56,6 +62,7 @@ interface InboxViewProps {
 export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const {
     conversations,
+    channels,
     activeConversationId,
     activeConversation,
     activeMessages,
@@ -116,6 +123,23 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [showArchivedConversations, setShowArchivedConversations] = useState<boolean>(false);
   const [pinToast, setPinToast] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState<boolean>(false);
+  const [copiedWebhook, setCopiedWebhook] = useState<boolean>(false);
+
+  const waChannel = channels.find((c) => c.type === 'whatsapp');
+  const igChannel = channels.find((c) => c.type === 'instagram');
+  const isWaConnected = waChannel?.status === 'connected';
+  const isIgConnected = igChannel?.status === 'connected';
+  const isAnyChannelConnected = isWaConnected || isIgConnected;
+
+  const handleCopyWebhookUrl = () => {
+    const url =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/api/webhooks/wame`
+        : 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame';
+    navigator.clipboard.writeText(url);
+    setCopiedWebhook(true);
+    setTimeout(() => setCopiedWebhook(false), 2000);
+  };
 
   // Estados e referências de Gravação de Áudio Real
   const [isRecording, setIsRecording] = useState(false);
@@ -782,8 +806,42 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
             )}
 
             {filteredList.length === 0 && (
-              <div className="text-center py-8 text-xs text-[#AEB7B3]">
-                {showArchivedConversations ? 'Nenhuma conversa arquivada' : 'Nenhuma conversa encontrada'}
+              <div className="p-4 text-center">
+                {!isAnyChannelConnected ? (
+                  <div className="bg-[#F7F9F8] dark:bg-[#19201C] border border-[#E5E9E7] dark:border-[#262E2A] rounded-2xl p-4 text-center space-y-2.5">
+                    <div className="w-9 h-9 rounded-full bg-[#EAFBF2] dark:bg-[#45D483]/15 text-[#45D483] flex items-center justify-center mx-auto">
+                      <Radio className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">
+                        Canais desconectados
+                      </p>
+                      <p className="text-[11px] text-[#6C7671] dark:text-[#AEB7B3] mt-0.5 leading-relaxed">
+                        Conecte o WhatsApp ou Instagram para receber conversas em tempo real.
+                      </p>
+                    </div>
+                    {onOpenConnectModal && (
+                      <button
+                        type="button"
+                        onClick={onOpenConnectModal}
+                        className="w-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] text-xs font-bold py-2 px-3 rounded-xl transition-all shadow-xs"
+                      >
+                        Conectar via WAME
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-8 text-xs text-[#AEB7B3] dark:text-[#6C7671] space-y-1">
+                    <p className="font-semibold text-[#252B28] dark:text-gray-300">
+                      {showArchivedConversations ? 'Nenhuma conversa arquivada' : 'Aguardando mensagens...'}
+                    </p>
+                    <p className="text-[11px]">
+                      {showArchivedConversations
+                        ? 'Você não possui conversas no arquivo.'
+                        : 'Envie ou receba uma mensagem via WhatsApp ou Instagram.'}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1473,8 +1531,122 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-[#AEB7B3]">
-            <p className="text-sm">Selecione uma conversa para visualizar</p>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
+            {!isAnyChannelConnected ? (
+              <div className="max-w-lg w-full bg-white dark:bg-[#151917] border border-[#E5E9E7] dark:border-[#262E2A] rounded-3xl p-8 shadow-xs text-center space-y-6 animate-in fade-in duration-300">
+                <div className="w-16 h-16 rounded-3xl bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2A342E] text-[#45D483] flex items-center justify-center mx-auto shadow-xs">
+                  <Radio className="w-8 h-8 animate-pulse" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 text-xs font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>Canais Desconectados</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#252B28] dark:text-[#F3F6F4]">
+                    Conecte o WhatsApp ou Instagram
+                  </h3>
+                  <p className="text-xs text-[#6C7671] dark:text-[#AEB7B3] leading-relaxed max-w-md mx-auto">
+                    Suas conversas só aparecerão aqui em tempo real após conectar os canais oficiais via API WAME.
+                  </p>
+                </div>
+
+                {/* Status dos Canais */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                  <div className="p-3.5 bg-[#FAFBFB] dark:bg-[#19201C] border border-[#E5E9E7] dark:border-[#262E2A] rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#45D483]/15 text-[#45D483] flex items-center justify-center font-bold text-xs">
+                        WA
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">WhatsApp</p>
+                        <p className="text-[10px] text-[#AEB7B3]">QR Code WAME</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      Desconectado
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 bg-[#FAFBFB] dark:bg-[#19201C] border border-[#E5E9E7] dark:border-[#262E2A] rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center font-bold text-xs">
+                        IG
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4]">Instagram</p>
+                        <p className="text-[10px] text-[#AEB7B3]">Meta OAuth</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      Desconectado
+                    </span>
+                  </div>
+                </div>
+
+                {/* Webhook WAME Box */}
+                <div className="p-4 bg-[#F7F9F8] dark:bg-[#1A211D] border border-[#E5E9E7] dark:border-[#2A342E] rounded-2xl text-left space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#252B28] dark:text-[#F3F6F4] flex items-center gap-1.5">
+                      <QrCode className="w-3.5 h-3.5 text-[#45D483]" />
+                      <span>URL do Webhook Oficial WAME:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyWebhookUrl}
+                      className="text-[11px] font-bold text-[#1E7E49] dark:text-[#45D483] hover:underline flex items-center gap-1"
+                    >
+                      {copiedWebhook ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedWebhook ? 'Copiado!' : 'Copiar URL'}</span>
+                    </button>
+                  </div>
+                  <div className="bg-white dark:bg-[#121614] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-[11px] font-mono text-[#252B28] dark:text-gray-200 truncate select-all">
+                    https://moonkywpp-e9w2.vercel.app/api/webhooks/wame
+                  </div>
+                  <p className="text-[10px] text-[#6C7671] dark:text-[#AEB7B3]">
+                    Cadastre este endpoint no painel da WAME após assinar para receber mensagens, fotos, vídeos, áudios e documentos reais diretamente aqui.
+                  </p>
+                </div>
+
+                {/* Botão de Conectar */}
+                {onOpenConnectModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenConnectModal}
+                    className="w-full py-3 px-5 rounded-2xl bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>Conectar WhatsApp / Instagram agora</span>
+                  </button>
+                )}
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="max-w-md w-full text-center space-y-4 p-8 bg-white dark:bg-[#151917] border border-[#E5E9E7] dark:border-[#262E2A] rounded-3xl">
+                <div className="w-12 h-12 rounded-full bg-[#EAFBF2] dark:bg-[#45D483]/15 text-[#45D483] flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#252B28] dark:text-[#F3F6F4]">
+                    Canal Conectado com Sucesso!
+                  </h3>
+                  <p className="text-xs text-[#6C7671] dark:text-[#AEB7B3] mt-1 leading-relaxed">
+                    Aguardando as primeiras mensagens de clientes no WhatsApp ou Instagram Direct. Assim que alguém enviar uma mensagem, ela aparecerá aqui instantaneamente.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-[#AEB7B3] space-y-2">
+                <div className="w-12 h-12 rounded-full bg-[#F1F3F2] dark:bg-[#1D2320] flex items-center justify-center mx-auto">
+                  <Radio className="w-5 h-5 text-[#AEB7B3]" />
+                </div>
+                <p className="text-sm font-semibold text-[#252B28] dark:text-gray-300">
+                  Selecione uma conversa
+                </p>
+                <p className="text-xs text-[#AEB7B3]">
+                  Escolha um contato na lista à esquerda para iniciar o atendimento
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

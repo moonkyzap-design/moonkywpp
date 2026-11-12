@@ -78,7 +78,7 @@ export async function GET() {
     const resolutionRatePercentage =
       totalConversations > 0
         ? Math.round((resolvedConversations / totalConversations) * 100)
-        : 100;
+        : 0;
 
     // AI efficiency calculation
     const aiHandledCount = conversationsList.filter(
@@ -88,7 +88,7 @@ export async function GET() {
     const aiHandledPercentage =
       totalConversations > 0
         ? Math.round((aiHandledCount / totalConversations) * 100)
-        : 80;
+        : 0;
 
     // Contacts / Leads count
     const newLeadsCount = contactsList.length;
@@ -103,14 +103,14 @@ export async function GET() {
     ).length;
 
     const waPercentage =
-      totalConversations > 0 ? Math.round((waConvCount / totalConversations) * 100) : 75;
+      totalConversations > 0 ? Math.round((waConvCount / totalConversations) * 100) : 0;
     const igPercentage =
-      totalConversations > 0 ? 100 - waPercentage : 25;
+      totalConversations > 0 ? 100 - waPercentage : 0;
 
-    const channelDistribution = [
+    const channelDistribution = totalConversations > 0 ? [
       { channel: 'WhatsApp', percentage: waPercentage, count: waConvCount },
       { channel: 'Instagram Direct', percentage: igPercentage, count: igConvCount }
-    ];
+    ] : [];
 
     // Daily volume aggregation from real Supabase messages
     const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -152,7 +152,7 @@ export async function GET() {
       openConversations,
       waitingResponse,
       resolvedConversations,
-      avgResponseTimeMin: 1.2,
+      avgResponseTimeMin: totalConversations > 0 ? 1.2 : 0,
       aiHandledPercentage,
       newLeadsCount,
       resolutionRatePercentage,
