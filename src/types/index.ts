@@ -83,6 +83,9 @@ export interface Conversation {
   lastMessageAt: string;
   lastMessageTimestamp?: number;
   isStarred?: boolean;
+  isPinned?: boolean;
+  pinnedAt?: string;
+  isArchived?: boolean;
 }
 
 export type SenderType = 'contact' | 'agent' | 'ai' | 'system';

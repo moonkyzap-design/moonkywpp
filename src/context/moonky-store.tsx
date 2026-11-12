@@ -37,7 +37,7 @@ import {
   initialAnalytics
 } from '@/lib/mock-data';
 import { moonkyAI } from '@/lib/ai/service';
-import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface MoonkyStoreContextType {
   // State
@@ -96,6 +96,10 @@ interface MoonkyStoreContextType {
   unpinMessage: (convId: string, messageId: string) => void;
   archiveMessage: (convId: string, messageId: string) => void;
   deleteMessage: (convId: string, messageId: string) => void;
+  pinConversation: (convId: string) => boolean;
+  unpinConversation: (convId: string) => void;
+  archiveConversation: (convId: string) => void;
+  deleteConversation: (convId: string) => void;
 }
 
 const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
@@ -699,6 +703,101 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  /**
+   * Fixar conversa no topo da lista (limite de até 5 conversas fixadas)
+   */
+  const pinConversation = (convId: string): boolean => {
+    const pinnedCount = conversations.filter((c) => c.isPinned && !c.isArchived).length;
+    const target = conversations.find((c) => c.id === convId);
+    if (!target) return false;
+    if (!target.isPinned && pinnedCount >= 5) {
+      return false;
+    }
+    const updated = conversations.map((c) =>
+      c.id === convId
+        ? { ...c, isPinned: true, pinnedAt: new Date().toISOString() }
+        : c
+    );
+    setConversations(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+      } catch {}
+    }
+    return true;
+  };
+
+  /**
+   * Desafixar conversa do topo
+   */
+  const unpinConversation = (convId: string) => {
+    const updated = conversations.map((c) =>
+      c.id === convId
+        ? { ...c, isPinned: false, pinnedAt: undefined }
+        : c
+    );
+    setConversations(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  /**
+   * Arquivar / Desarquivar conversa inteira
+   */
+  const archiveConversation = (convId: string) => {
+    const updated = conversations.map((c) =>
+      c.id === convId
+        ? { ...c, isArchived: !c.isArchived, isPinned: false }
+        : c
+    );
+    setConversations(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+      } catch {}
+    }
+  };
+
+  /**
+   * Excluir conversa
+   */
+  const deleteConversation = (convId: string) => {
+    const updated = conversations.filter((c) => c.id !== convId);
+    setConversations(updated);
+    if (activeConversationId === convId) {
+      setActiveConversationId(updated.length > 0 ? updated[0].id : null);
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+      } catch {}
+    }
+    // Remove mensagens da conversa
+    setMessages((prev) => {
+      const copy = { ...prev };
+      delete copy[convId];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_messages_v4', JSON.stringify(copy));
+        } catch {}
+      }
+      return copy;
+    });
+    // Se Supabase estiver conectado, remove de forma assíncrona
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        supabase.from('conversations').delete().eq('id', convId).then(() => {
+          syncDashboardStatsFromSupabase();
+        });
+      } catch (err) {
+        console.warn('Erro ao deletar conversa no Supabase:', err);
+      }
+    }
+  };
+
   return (
     <MoonkyStoreContext.Provider
       value={{
@@ -752,7 +851,11 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         pinMessage,
         unpinMessage,
         archiveMessage,
-        deleteMessage
+        deleteMessage,
+        pinConversation,
+        unpinConversation,
+        archiveConversation,
+        deleteConversation
       }}
     >
       {children}

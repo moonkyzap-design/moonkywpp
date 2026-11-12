@@ -69,7 +69,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     pinMessage,
     unpinMessage,
     archiveMessage,
-    deleteMessage
+    deleteMessage,
+    pinConversation,
+    unpinConversation,
+    archiveConversation,
+    deleteConversation
   } = useMoonky();
 
   // Estados de entrada e abas
@@ -81,7 +85,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [notificationsMuted, setNotificationsMuted] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
-  // Estados de Menu de Contexto Minimalista (Fixar, Arquivar, Excluir)
+  // Estados de Menu de Contexto Minimalista de Mensagens
   const [contextMenu, setContextMenu] = useState<{
     isOpen: boolean;
     x: number;
@@ -93,6 +97,20 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     y: 0,
     message: null
   });
+
+  // Estados de Menu de Contexto Minimalista de Conversas
+  const [convContextMenu, setConvContextMenu] = useState<{
+    isOpen: boolean;
+    x: number;
+    y: number;
+    conversation: Conversation | null;
+  }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    conversation: null
+  });
+  const [showArchivedConversations, setShowArchivedConversations] = useState<boolean>(false);
   const [pinToast, setPinToast] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState<boolean>(false);
 
@@ -394,16 +412,20 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     setNoteInput('');
   };
 
-  // Fechar menu de contexto ao clicar fora ou pressionar Escape
+  // Fechar menus de contexto ao clicar fora ou pressionar Escape
   useEffect(() => {
     const handleClose = () => {
       if (contextMenu.isOpen) {
         setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
       }
+      if (convContextMenu.isOpen) {
+        setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && contextMenu.isOpen) {
-        setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+      if (e.key === 'Escape') {
+        if (contextMenu.isOpen) setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
+        if (convContextMenu.isOpen) setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
       }
     };
     window.addEventListener('click', handleClose);
@@ -412,9 +434,9 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       window.removeEventListener('click', handleClose);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [contextMenu.isOpen]);
+  }, [contextMenu.isOpen, convContextMenu.isOpen]);
 
-  // Abertura de menu via botão direito
+  // Abertura de menu de Mensagem via botão direito
   const handleContextMenu = (e: React.MouseEvent, msg: Message) => {
     e.preventDefault();
     e.stopPropagation();
@@ -430,7 +452,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     });
   };
 
-  // Abertura de menu via 3 pontinhos minimalistas
+  // Abertura de menu de Mensagem via 3 pontinhos minimalistas
   const handleDotsClick = (e: React.MouseEvent, msg: Message) => {
     e.preventDefault();
     e.stopPropagation();
@@ -445,6 +467,67 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       y: Math.max(10, posY),
       message: msg
     });
+  };
+
+  // Abertura de menu da Conversa via botão direito
+  const handleConvContextMenu = (e: React.MouseEvent, conv: Conversation) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menuWidth = 210;
+    const menuHeight = 160;
+    const posX = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const posY = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+    setConvContextMenu({
+      isOpen: true,
+      x: Math.max(10, posX),
+      y: Math.max(10, posY),
+      conversation: conv
+    });
+  };
+
+  // Abertura de menu da Conversa via 3 pontinhos minimalistas
+  const handleConvDotsClick = (e: React.MouseEvent, conv: Conversation) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuWidth = 210;
+    const menuHeight = 160;
+    const posX = Math.min(rect.right + 6, window.innerWidth - menuWidth - 10);
+    const posY = Math.min(rect.top, window.innerHeight - menuHeight - 10);
+    setConvContextMenu({
+      isOpen: true,
+      x: Math.max(10, posX),
+      y: Math.max(10, posY),
+      conversation: conv
+    });
+  };
+
+  // Ações de Conversa: Fixar / Desafixar (até 5 conversas no topo)
+  const handleTogglePinConv = (conv: Conversation) => {
+    if (conv.isPinned) {
+      unpinConversation(conv.id);
+    } else {
+      const ok = pinConversation(conv.id);
+      if (!ok) {
+        setPinToast('Limite de 5 conversas fixadas atingido. Desafixe uma conversa para fixar outra.');
+        setTimeout(() => setPinToast(null), 3500);
+      }
+    }
+    setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
+  };
+
+  // Ações de Conversa: Arquivar / Desarquivar
+  const handleToggleArchiveConv = (conv: Conversation) => {
+    archiveConversation(conv.id);
+    setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
+  };
+
+  // Ações de Conversa: Excluir
+  const handleDeleteConv = (conv: Conversation) => {
+    if (confirm(`Deseja realmente excluir a conversa com ${conv.contact.name}?`)) {
+      deleteConversation(conv.id);
+    }
+    setConvContextMenu({ isOpen: false, x: 0, y: 0, conversation: null });
   };
 
   // Ações de Mensagem: Fixar / Desafixar (até 5 mensagens)
@@ -476,7 +559,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     setContextMenu({ isOpen: false, x: 0, y: 0, message: null });
   };
 
-  // Ordenação de conversas pela última mensagem enviada ou recebida
+  // Ordenação de conversas pela última mensagem enviada ou recebida (com fixadas no topo)
   const getConversationTimeValue = (conv: Conversation): number => {
     if (conv.lastMessageTimestamp) return conv.lastMessageTimestamp;
     if (conv.lastMessageAt) {
@@ -492,6 +575,8 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
   const filteredList = conversations
     .filter((c) => {
+      if (!showArchivedConversations && c.isArchived) return false;
+      if (showArchivedConversations && !c.isArchived) return false;
       if (activeSegment !== 'all' && c.channelType !== activeSegment) return false;
       if (searchQuery.trim().length > 0) {
         const q = searchQuery.toLowerCase();
@@ -502,7 +587,15 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       }
       return true;
     })
-    .sort((a, b) => getConversationTimeValue(b) - getConversationTimeValue(a));
+    .sort((a, b) => {
+      // Conversas fixadas têm prioridade no topo da lista
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return getConversationTimeValue(b) - getConversationTimeValue(a);
+    });
+
+  const pinnedConversationsCount = conversations.filter((c) => c.isPinned && !c.isArchived).length;
+  const archivedConversationsCount = conversations.filter((c) => c.isArchived).length;
 
   const pinnedMessages = activeMessages.filter((m) => m.isPinned && !m.isArchived);
   const archivedCount = activeMessages.filter((m) => m.isArchived).length;
@@ -605,6 +698,35 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
           {/* Lista de Contatos / Mensagens — Ocupa toda a coluna */}
           <div className="flex-1 overflow-y-auto px-3 py-1 space-y-1">
+            {/* Banner/Botão para Alternar Conversas Arquivadas */}
+            {archivedConversationsCount > 0 && (
+              <div className="px-1 pt-1 pb-1">
+                <button
+                  type="button"
+                  onClick={() => setShowArchivedConversations(!showArchivedConversations)}
+                  className={`w-full py-1.5 px-3 rounded-xl text-[11px] font-semibold flex items-center justify-between transition-all ${
+                    showArchivedConversations
+                      ? 'bg-[#EAFBF2] dark:bg-[#1E3328] text-[#1E7E49] dark:text-[#45D483] border border-emerald-200 dark:border-emerald-800/40'
+                      : 'bg-[#F1F3F2] dark:bg-[#1D2320] text-[#6C7671] dark:text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>{showArchivedConversations ? 'Ver conversas ativas' : 'Conversas arquivadas'}</span>
+                  </span>
+                  <span className="text-[10px] bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded-full font-bold">
+                    {archivedConversationsCount}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {filteredList.length === 0 && (
+              <div className="text-center py-8 text-xs text-[#AEB7B3]">
+                {showArchivedConversations ? 'Nenhuma conversa arquivada' : 'Nenhuma conversa encontrada'}
+              </div>
+            )}
+
             {filteredList.map((conv) => {
               const isSelected = conv.id === activeConversationId;
               const isWhatsApp = conv.channelType === 'whatsapp';
@@ -613,8 +735,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 <div
                   key={conv.id}
                   onClick={() => setActiveConversationId(conv.id)}
-                  className={`p-3 rounded-2xl cursor-pointer transition-all ${
-                    isSelected ? 'bg-[#F1F3F2]' : 'hover:bg-[#F7F9F8]'
+                  onContextMenu={(e) => handleConvContextMenu(e, conv)}
+                  className={`group relative p-3 rounded-2xl cursor-pointer transition-all border ${
+                    isSelected
+                      ? 'bg-[#F1F3F2] dark:bg-[#1D2320] border-[#E5E9E7]/60 dark:border-[#2C3530]'
+                      : 'border-transparent hover:bg-[#F7F9F8] dark:hover:bg-[#19201C]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -626,7 +751,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                         className="w-11 h-11 rounded-full object-cover"
                       />
                       <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#151917] ${
                           isWhatsApp ? 'bg-[#45D483]' : 'bg-gradient-to-tr from-amber-500 to-purple-600'
                         }`}
                         title={isWhatsApp ? 'WhatsApp Oficial' : 'Instagram Direct Oficial'}
@@ -635,26 +760,47 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-[#252B28] truncate">
-                          {conv.contact.name}
-                        </h4>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h4 className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4] truncate">
+                            {conv.contact.name}
+                          </h4>
+                          {conv.isPinned && (
+                            <span title="Conversa fixada no topo (até 5)">
+                              <Pin className="w-3 h-3 text-[#45D483] fill-[#45D483] shrink-0" />
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-[#AEB7B3] font-medium shrink-0 ml-1">
                           {conv.lastMessageAt}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-[#6C7671] truncate mt-0.5">
-                        {conv.lastMessageSnippet}
-                      </p>
-                    </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-[11px] text-[#6C7671] dark:text-[#AEB7B3] truncate flex-1 pr-1">
+                          {conv.lastMessageSnippet}
+                        </p>
 
-                    {conv.unreadCount > 0 ? (
-                      <span className="w-4 h-4 rounded-full bg-[#45D483] text-[#252B28] text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                        {conv.unreadCount}
-                      </span>
-                    ) : (
-                      <CheckCheck className="w-3.5 h-3.5 text-[#45D483] shrink-0" />
-                    )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {conv.unreadCount > 0 ? (
+                            <span className="w-4 h-4 rounded-full bg-[#45D483] text-[#252B28] text-[9px] font-extrabold flex items-center justify-center">
+                              {conv.unreadCount}
+                            </span>
+                          ) : (
+                            <CheckCheck className="w-3.5 h-3.5 text-[#45D483]" />
+                          )}
+
+                          {/* Botão Minimalista de 3 Pontinhos da Conversa */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleConvDotsClick(e, conv)}
+                            title="Opções da conversa (Fixar, Arquivar, Excluir)"
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[#AEB7B3] hover:text-[#252B28] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all opacity-80 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -1399,7 +1545,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
       )}
 
       {/* ===================================================================
-          MENU DE CONTEXTO MINIMALISTA (FIXAR, ARQUIVAR, EXCLUIR)
+          MENU DE CONTEXTO MINIMALISTA DE MENSAGENS (FIXAR, ARQUIVAR, EXCLUIR)
           =================================================================== */}
       {contextMenu.isOpen && contextMenu.message && (
         <div
@@ -1448,6 +1594,64 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
           >
             <Trash2 className="w-4 h-4 text-rose-500" />
             <span>Excluir</span>
+          </button>
+        </div>
+      )}
+
+      {/* ===================================================================
+          MENU DE CONTEXTO MINIMALISTA DA CONVERSA (FIXAR, ARQUIVAR, EXCLUIR)
+          =================================================================== */}
+      {convContextMenu.isOpen && convContextMenu.conversation && (
+        <div
+          style={{ top: `${convContextMenu.y}px`, left: `${convContextMenu.x}px` }}
+          className="fixed z-50 bg-white dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#2C3530] rounded-2xl shadow-xl shadow-black/15 py-1.5 w-52 animate-in fade-in zoom-in-95 duration-100 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Opção Fixar / Desafixar Conversa (até 5) */}
+          <button
+            type="button"
+            onClick={() => handleTogglePinConv(convContextMenu.conversation!)}
+            className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-[#252B28] dark:text-gray-200 hover:bg-[#F1F3F2] dark:hover:bg-[#262E2A] transition-colors text-left"
+          >
+            <span className="flex items-center gap-2.5">
+              {convContextMenu.conversation.isPinned ? (
+                <PinOff className="w-4 h-4 text-[#AEB7B3]" />
+              ) : (
+                <Pin className="w-4 h-4 text-[#45D483]" />
+              )}
+              <span>
+                {convContextMenu.conversation.isPinned ? 'Desafixar do topo' : 'Fixar conversa no topo'}
+              </span>
+            </span>
+            {!convContextMenu.conversation.isPinned && (
+              <span className="text-[10px] text-[#AEB7B3] font-mono">
+                {pinnedConversationsCount}/5
+              </span>
+            )}
+          </button>
+
+          {/* Opção Arquivar / Desarquivar Conversa */}
+          <button
+            type="button"
+            onClick={() => handleToggleArchiveConv(convContextMenu.conversation!)}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-[#252B28] dark:text-gray-200 hover:bg-[#F1F3F2] dark:hover:bg-[#262E2A] transition-colors text-left"
+          >
+            <Archive className="w-4 h-4 text-[#6C7671]" />
+            <span>
+              {convContextMenu.conversation.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}
+            </span>
+          </button>
+
+          <div className="h-[1px] bg-[#E5E9E7] dark:bg-[#2C3530] my-1" />
+
+          {/* Opção Excluir Conversa */}
+          <button
+            type="button"
+            onClick={() => handleDeleteConv(convContextMenu.conversation!)}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left"
+          >
+            <Trash2 className="w-4 h-4 text-rose-500" />
+            <span>Excluir conversa</span>
           </button>
         </div>
       )}
