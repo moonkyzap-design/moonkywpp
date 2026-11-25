@@ -49,10 +49,10 @@ import {
   Copy,
   Check,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
-import { currentUser } from '@/lib/mock-data';
 import { Message, MessageType, Contact, ChannelType, Conversation } from '@/types';
 
 interface InboxViewProps {
@@ -83,7 +83,10 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     pinConversation,
     unpinConversation,
     archiveConversation,
-    deleteConversation
+    deleteConversation,
+    currentUser,
+    syncWithWame,
+    startNewConversation
   } = useMoonky();
 
   // Estados de entrada e abas
@@ -93,6 +96,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [rightTab, setRightTab] = useState<'media' | 'files' | 'voice' | 'links' | 'notes'>('media');
   const [noteInput, setNoteInput] = useState('');
   const [notificationsMuted, setNotificationsMuted] = useState(false);
+  const [isSyncingWame, setIsSyncingWame] = useState(false);
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+  const [newChatPhone, setNewChatPhone] = useState('');
+  const [newChatMessage, setNewChatMessage] = useState('');
+  const [isSubmittingNewChat, setIsSubmittingNewChat] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
   // Estados de Menu de Contexto Minimalista de Mensagens
@@ -488,6 +496,29 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     setNoteInput('');
   };
 
+  const handleManualSync = async () => {
+    try {
+      setIsSyncingWame(true);
+      await syncWithWame();
+    } finally {
+      setIsSyncingWame(false);
+    }
+  };
+
+  const handleStartNewChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChatPhone.trim()) return;
+    try {
+      setIsSubmittingNewChat(true);
+      await startNewConversation(newChatPhone.trim(), newChatMessage.trim(), 'whatsapp');
+      setIsNewChatModalOpen(false);
+      setNewChatPhone('');
+      setNewChatMessage('');
+    } finally {
+      setIsSubmittingNewChat(false);
+    }
+  };
+
   // Fechar menus de contexto ao clicar fora ou pressionar Escape
   useEffect(() => {
     const handleClose = () => {
@@ -726,18 +757,41 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
           =================================================================== */}
       <div className="w-[300px] md:w-[320px] bg-white dark:bg-[#151917] border-r border-[#E5E9E7]/80 dark:border-[#262E2A] flex flex-col justify-between shrink-0 select-none">
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Campo de Busca em Pílula */}
+          {/* Campo de Busca em Pílula + Ações Rápidas */}
           <div className="p-4 pb-2">
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                placeholder="Buscar conversas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#F1F3F2] dark:bg-[#1D2320] text-xs text-[#252B28] dark:text-[#F3F6F4] placeholder-[#AEB7B3] rounded-full pl-4 pr-11 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#45D483] transition-all"
-              />
-              <button className="absolute right-1.5 w-7 h-7 rounded-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] flex items-center justify-center transition-all shadow-xs">
-                <Search className="w-3.5 h-3.5 text-[#252B28]" />
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1 flex items-center">
+                <input
+                  type="text"
+                  placeholder="Buscar conversas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#F1F3F2] dark:bg-[#1D2320] text-xs text-[#252B28] dark:text-[#F3F6F4] placeholder-[#AEB7B3] rounded-full pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-[#45D483] transition-all"
+                />
+                <button className="absolute right-1 w-6 h-6 rounded-full bg-[#45D483] hover:bg-[#3bc275] text-[#252B28] flex items-center justify-center transition-all shadow-xs">
+                  <Search className="w-3 h-3 text-[#252B28]" />
+                </button>
+              </div>
+
+              {/* Botão Sincronizar WAME WhatsApp */}
+              <button
+                type="button"
+                onClick={handleManualSync}
+                disabled={isSyncingWame}
+                title="Sincronizar conversas e fotos do WhatsApp"
+                className="w-8 h-8 rounded-full bg-[#F1F3F2] dark:bg-[#1D2320] hover:bg-[#45D483]/20 hover:text-[#1E7E49] text-[#6C7671] dark:text-[#AEB7B3] flex items-center justify-center transition-all shrink-0 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWame ? 'animate-spin text-[#45D483]' : ''}`} />
+              </button>
+
+              {/* Botão Nova Conversa */}
+              <button
+                type="button"
+                onClick={() => setIsNewChatModalOpen(true)}
+                title="Iniciar Nova Conversa no WhatsApp"
+                className="w-8 h-8 rounded-full bg-[#252B28] dark:bg-[#45D483] text-white dark:text-[#252B28] hover:scale-105 flex items-center justify-center transition-all shrink-0 shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -833,15 +887,40 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     )}
                   </div>
                 ) : (
-                  <div className="py-8 text-xs text-[#AEB7B3] dark:text-[#6C7671] space-y-1">
-                    <p className="font-semibold text-[#252B28] dark:text-gray-300">
-                      {showArchivedConversations ? 'Nenhuma conversa arquivada' : 'Aguardando mensagens...'}
-                    </p>
-                    <p className="text-[11px]">
-                      {showArchivedConversations
-                        ? 'Você não possui conversas no arquivo.'
-                        : 'Envie ou receba uma mensagem via WhatsApp ou Instagram.'}
-                    </p>
+                  <div className="py-8 text-xs text-[#AEB7B3] dark:text-[#6C7671] space-y-3 text-center">
+                    <div>
+                      <p className="font-semibold text-[#252B28] dark:text-gray-300">
+                        {showArchivedConversations ? 'Nenhuma conversa arquivada' : 'Nenhuma conversa exibida'}
+                      </p>
+                      <p className="text-[11px] mt-0.5">
+                        {showArchivedConversations
+                          ? 'Você não possui conversas no arquivo.'
+                          : 'Sincronize suas conversas do WhatsApp ou inicie um novo atendimento.'}
+                      </p>
+                    </div>
+
+                    {!showArchivedConversations && (
+                      <div className="flex flex-col gap-2 pt-1 px-2">
+                        <button
+                          type="button"
+                          onClick={handleManualSync}
+                          disabled={isSyncingWame}
+                          className="w-full bg-[#EAFBF2] dark:bg-[#1E3328] hover:bg-[#d4f8e3] text-[#1E7E49] dark:text-[#45D483] text-xs font-bold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWame ? 'animate-spin' : ''}`} />
+                          <span>{isSyncingWame ? 'Sincronizando WhatsApp...' : 'Sincronizar Conversas'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsNewChatModalOpen(true)}
+                          className="w-full bg-[#252B28] dark:bg-[#45D483] hover:opacity-90 text-white dark:text-[#252B28] text-xs font-bold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Nova Conversa WhatsApp</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2257,6 +2336,76 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
           >
             <span>Pressione <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">ESC</kbd> ou clique no X para fechar a tela cheia</span>
             <span className="hidden sm:inline font-mono">Visualizador Oficial Moonkyzap Omnichannel</span>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Minimalista: Iniciar Nova Conversa */}
+      {isNewChatModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#151917] border border-[#E5E9E7] dark:border-[#262E2A] rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#EAFBF2] dark:bg-[#45D483]/20 text-[#1E7E49] dark:text-[#45D483] flex items-center justify-center">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm text-[#252B28] dark:text-white">Iniciar Nova Conversa</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewChatModalOpen(false)}
+                className="w-7 h-7 rounded-full bg-[#F1F3F2] dark:bg-[#1D2320] text-[#6C7671] hover:text-[#252B28] flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleStartNewChat} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Número de WhatsApp (com DDD)
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: 5511999998888 ou 11999998888"
+                  value={newChatPhone}
+                  onChange={(e) => setNewChatPhone(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2.5 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Primeira Mensagem (opcional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Olá! Como posso ajudar você hoje?"
+                  value={newChatMessage}
+                  onChange={(e) => setNewChatMessage(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483] resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewChatModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#6C7671] hover:bg-[#F1F3F2] dark:hover:bg-[#1D2320] transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingNewChat || !newChatPhone.trim()}
+                  className="bg-[#45D483] hover:bg-[#3bc275] disabled:opacity-50 text-[#252B28] font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isSubmittingNewChat ? 'Iniciando...' : 'Iniciar Atendimento'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

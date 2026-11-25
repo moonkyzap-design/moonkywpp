@@ -21,7 +21,7 @@ import {
   Layers
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
-import { currentUser, initialOrganization } from '@/lib/mock-data';
+import { initialOrganization } from '@/lib/mock-data';
 
 export function SettingsView() {
   const { isLiveSupabase } = useMoonky();

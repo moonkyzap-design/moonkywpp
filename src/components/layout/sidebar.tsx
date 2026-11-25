@@ -18,7 +18,6 @@ import {
   Moon
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
-import { currentUser } from '@/lib/mock-data';
 
 export type NavigationTab =
   | 'overview'
@@ -38,7 +37,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentTab, onSelectTab, onOpenConnectModal }: SidebarProps) {
-  const { conversations, isDarkMode, setIsDarkMode } = useMoonky();
+  const { conversations, isDarkMode, setIsDarkMode, currentUser } = useMoonky();
   const unreadTotal = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
   // 6 itens exatos da imagem de referência traduzidos para Português Brasil

@@ -340,4 +340,113 @@ export class WameClient {
       };
     }
   }
+
+  /**
+   * Fetch active chats list from WAME
+   * Endpoint: GET https://server.wame.api.br/{KEY}/chat
+   */
+  async getChats(): Promise<Array<{ id: string; name?: string; timestamp?: number; unreadCount?: number }>> {
+    if (!this.instanceKey) return [];
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.instanceKey}/chat`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+      if (!response.ok) return [];
+      const json = await response.json();
+      if (Array.isArray(json)) return json;
+      if (Array.isArray(json?.data)) return json.data;
+      if (Array.isArray(json?.chats)) return json.chats;
+      if (Array.isArray(json?.data?.chats)) return json.data.chats;
+      if (Array.isArray(json?.result)) return json.result;
+      return [];
+    } catch (err) {
+      console.warn('[WAME_GET_CHATS_WARN]', err);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch messages for a specific chat from WAME
+   * Endpoint: GET https://server.wame.api.br/{KEY}/chat/messages?chatId=...
+   */
+  async getChatMessages(chatId: string, limit = 25): Promise<any[]> {
+    if (!this.instanceKey || !chatId) return [];
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/${this.instanceKey}/chat/messages?chatId=${encodeURIComponent(chatId)}&page=1&limit=${limit}`,
+        {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store'
+        }
+      );
+      if (!response.ok) return [];
+      const json = await response.json();
+      if (Array.isArray(json)) return json;
+      if (Array.isArray(json?.data)) return json.data;
+      if (Array.isArray(json?.messages)) return json.messages;
+      if (Array.isArray(json?.data?.messages)) return json.data.messages;
+      if (Array.isArray(json?.result)) return json.result;
+      return [];
+    } catch (err) {
+      console.warn('[WAME_GET_CHAT_MESSAGES_WARN]', err);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch contacts with profile pictures from WAME
+   * Endpoint: GET https://server.wame.api.br/{KEY}/contacts
+   */
+  async getContacts(): Promise<Array<{ id: string; name?: string; notify?: string; imgUrl?: string }>> {
+    if (!this.instanceKey) return [];
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.instanceKey}/contacts`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+      if (!response.ok) return [];
+      const json = await response.json();
+      if (Array.isArray(json)) return json;
+      if (Array.isArray(json?.data)) return json.data;
+      if (Array.isArray(json?.contacts)) return json.contacts;
+      if (Array.isArray(json?.data?.contacts)) return json.data.contacts;
+      if (Array.isArray(json?.result)) return json.result;
+      return [];
+    } catch (err) {
+      console.warn('[WAME_GET_CONTACTS_WARN]', err);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch profile picture directly for a jid or instance
+   * Endpoint: GET https://server.wame.api.br/{KEY}/chat/profile-picture?jid=...
+   */
+  async getProfilePicture(jid?: string): Promise<string | null> {
+    if (!this.instanceKey) return null;
+    try {
+      const url = jid
+        ? `${this.baseUrl}/${this.instanceKey}/chat/profile-picture?jid=${encodeURIComponent(jid)}`
+        : `${this.baseUrl}/${this.instanceKey}/instance`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (
+        data?.profilePictureUrl ||
+        data?.image ||
+        data?.imgUrl ||
+        data?.data?.imageProfile ||
+        data?.user?.imageProfile ||
+        data?.instance?.user?.imageProfile ||
+        null
+      );
+    } catch {
+      return null;
+    }
+  }
 }
+

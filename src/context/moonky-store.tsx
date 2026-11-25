@@ -5,7 +5,7 @@
 // Handles real-time conversation state, AI handoff, CRM, and integrations
 // ===================================================================
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   Conversation,
   Message,
@@ -20,11 +20,12 @@ import {
   ChannelType,
   ConversationStatus,
   AIStatus,
-  MessageType
+  MessageType,
+  UserProfile
 } from '@/types';
 import {
   initialOrganization,
-  currentUser,
+  currentUser as initialCurrentUser,
   initialChannels,
   initialTeamMembers,
   initialContacts,
@@ -78,6 +79,14 @@ interface MoonkyStoreContextType {
 
   // Actions
   setActiveConversationId: (id: string) => void;
+  currentUser: UserProfile;
+  updateCurrentUser: (profile: Partial<UserProfile>) => void;
+  syncWithWame: (customKey?: string) => Promise<void>;
+  startNewConversation: (
+    phoneOrUsername: string,
+    initialMessage?: string,
+    channelType?: ChannelType
+  ) => Promise<string | null>;
   sendMessage: (
     content: string,
     type?: MessageType,
@@ -110,8 +119,9 @@ interface MoonkyStoreContextType {
 const MoonkyStoreContext = createContext<MoonkyStoreContextType | null>(null);
 
 export function MoonkyStoreProvider({ children }: { children: React.ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<UserProfile>(initialCurrentUser);
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversations[0]?.id || null);
   const [messages, setMessages] = useState<Record<string, Message[]>>(initialMessages);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
@@ -133,6 +143,18 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
   const [filterAgent, setFilterAgent] = useState<'all' | 'mine' | 'unassigned'>('all');
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const updateCurrentUser = (profile: Partial<UserProfile>) => {
+    setCurrentUser((prev) => {
+      const updated = { ...prev, ...profile };
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_user_profile', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+  };
 
   const syncDashboardStatsFromSupabase = async () => {
     try {
@@ -156,6 +178,95 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  const syncWithWame = useCallback(async (customKey?: string) => {
+    try {
+      let keyToUse = customKey;
+      if (!keyToUse && typeof window !== 'undefined') {
+        const saved = localStorage.getItem('moonky_wame_credentials');
+        if (saved) {
+          try {
+            keyToUse = JSON.parse(saved).instanceKey;
+          } catch {}
+        }
+      }
+      if (!keyToUse) {
+        const wa = channels.find((c) => c.type === 'whatsapp');
+        keyToUse = wa?.instanceKey;
+      }
+
+      const res = await fetch(`/api/channels/wame/sync?instanceKey=${encodeURIComponent(keyToUse || '')}`, {
+        cache: 'no-store'
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          // 1. Atualizar perfil com foto real do WhatsApp e nome
+          if (data.user?.imageProfile || data.user?.name) {
+            setCurrentUser((prev) => {
+              const updated = {
+                ...prev,
+                fullName: data.user.name || prev.fullName,
+                avatarUrl: data.user.imageProfile || prev.avatarUrl
+              };
+              if (typeof window !== 'undefined') {
+                try {
+                  localStorage.setItem('moonky_user_profile', JSON.stringify(updated));
+                } catch {}
+              }
+              return updated;
+            });
+          }
+
+          // 2. Atualizar status de conexão do canal WhatsApp
+          if (data.connected) {
+            setChannels((prev) =>
+              prev.map((ch) =>
+                ch.type === 'whatsapp'
+                  ? {
+                      ...ch,
+                      status: 'connected',
+                      phoneNumber: data.user?.phone || ch.phoneNumber,
+                      lastSyncAt: 'Agora'
+                    }
+                  : ch
+              )
+            );
+          }
+
+          // 3. Atualizar conversas sem apagar as locais
+          if (Array.isArray(data.conversations) && data.conversations.length > 0) {
+            setConversations((prev) => {
+              const incoming: Conversation[] = data.conversations;
+              const merged = [...incoming];
+              for (const p of prev) {
+                if (!merged.some((m) => m.id === p.id)) {
+                  merged.push(p);
+                }
+              }
+              return merged;
+            });
+
+            setActiveConversationId((prevId) => {
+              if (prevId) return prevId;
+              return data.conversations[0]?.id || null;
+            });
+          }
+
+          // 4. Atualizar mensagens
+          if (data.messages && Object.keys(data.messages).length > 0) {
+            setMessages((prev) => ({
+              ...prev,
+              ...data.messages
+            }));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[SYNC_WAME_WARN]', err);
+    }
+  }, [channels]);
+
   const syncConversationsFromSupabase = async () => {
     try {
       const res = await fetch('/api/conversations/list', { cache: 'no-store' });
@@ -165,9 +276,6 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           if (Array.isArray(data.conversations) && data.conversations.length > 0) {
             setConversations(data.conversations);
             setActiveConversationId(data.conversations[0].id);
-          } else {
-            setConversations([]);
-            setActiveConversationId(null);
           }
           if (Array.isArray(data.channels) && data.channels.length > 0) {
             setChannels((prev) =>
@@ -200,21 +308,32 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setIsLiveSupabase(isSupabaseConfigured());
-    // Sincroniza estatísticas e conversas reais do Supabase
+    // Sincroniza estatísticas e conversas
     syncDashboardStatsFromSupabase();
     syncConversationsFromSupabase();
 
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('moonky_theme');
-      if (saved === 'dark') {
+      const savedTheme = localStorage.getItem('moonky_theme');
+      if (savedTheme === 'dark') {
         setIsDarkModeState(true);
         document.documentElement.classList.add('dark');
-      } else if (saved === 'light') {
+      } else if (savedTheme === 'light') {
         setIsDarkModeState(false);
         document.documentElement.classList.remove('dark');
       } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         setIsDarkModeState(true);
         document.documentElement.classList.add('dark');
+      }
+
+      // Carregar perfil salvo do usuário com a foto do WhatsApp
+      try {
+        const savedProfile = localStorage.getItem('moonky_user_profile');
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          setCurrentUser((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch (err) {
+        console.warn('Failed to load saved user profile', err);
       }
 
       // Carregar credenciais salvas da WAME API
@@ -239,19 +358,18 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       } catch (err) {
         console.warn('Failed to load saved WAME credentials from localStorage', err);
       }
-
-      // Limpar caches legados de demonstração para garantir dados 100% reais e limpos
-      try {
-        localStorage.removeItem('moonky_messages_v4');
-        localStorage.removeItem('moonky_conversations_v4');
-        localStorage.removeItem('moonky_messages_v3');
-        localStorage.removeItem('moonky_conversations_v3');
-        localStorage.removeItem('moonky_contacts_v4');
-      } catch (err) {
-        console.error('Failed to clear legacy local storage cache', err);
-      }
     }
-  }, []);
+
+    // Sincronização inicial com a API da WAME
+    syncWithWame();
+
+    // Polling ativo a cada 4 segundos com a WAME para buscar novas mensagens e perfil do WhatsApp
+    const interval = setInterval(() => {
+      syncWithWame();
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [syncWithWame]);
 
   const setIsDarkMode = (val: boolean) => {
     setIsDarkModeState(val);
@@ -412,18 +530,170 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
     // 2. Despachar via API Oficial WAME (WhatsApp / Instagram Direct)
     try {
+      let instKey = '';
+      if (typeof window !== 'undefined') {
+        try {
+          const savedCreds = localStorage.getItem('moonky_wame_credentials');
+          if (savedCreds) {
+            instKey = JSON.parse(savedCreds).instanceKey || '';
+          }
+        } catch {}
+      }
+      if (!instKey) {
+        const wa = channels.find((c) => c.type === 'whatsapp');
+        instKey = wa?.instanceKey || '';
+      }
+
       fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId: activeConversationId,
           content: content.trim(),
-          recipient: activeConversation?.contact.phone || activeConversation?.contact.instagramUsername
+          recipient: activeConversation?.contact.phone || activeConversation?.contact.instagramUsername,
+          instanceKey: instKey
         })
       }).catch((e) => console.log('Outgoing dispatch recorded', e));
     } catch (e) {
       // non-blocking
     }
+  };
+
+  /**
+   * Iniciar nova conversa (WhatsApp / Instagram)
+   */
+  const startNewConversation = async (
+    phoneOrUsername: string,
+    initialMessage?: string,
+    channelType: ChannelType = 'whatsapp'
+  ): Promise<string | null> => {
+    const cleanTarget = phoneOrUsername.trim();
+    if (!cleanTarget) return null;
+
+    // Verificar se já existe conversa com esse contato
+    const cleanDigits = cleanTarget.replace(/\D/g, '');
+    const existing = conversations.find(
+      (c) =>
+        (c.contact.phone && cleanDigits && c.contact.phone.replace(/\D/g, '') === cleanDigits) ||
+        (c.contact.instagramUsername && c.contact.instagramUsername.toLowerCase() === cleanTarget.toLowerCase())
+    );
+
+    if (existing) {
+      setActiveConversationId(existing.id);
+      if (initialMessage && initialMessage.trim()) {
+        await sendMessage(initialMessage.trim());
+      }
+      return existing.id;
+    }
+
+    const convId = `conv-${Date.now()}`;
+    const contactId = `contact-${Date.now()}`;
+    const isWa = channelType === 'whatsapp';
+
+    const newContact: Contact = {
+      id: contactId,
+      organizationId: '11111111-1111-4111-8111-111111111111',
+      name: cleanTarget,
+      phone: isWa ? cleanTarget : undefined,
+      instagramUsername: !isWa ? cleanTarget : undefined,
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanTarget)}&background=0D8ABC&color=fff`,
+      tags: [{ id: 'tag-new', name: 'Novo', color: '#10B981' }],
+      customFields: {},
+      leadStatus: 'lead',
+      createdAt: 'Agora'
+    };
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const now = Date.now();
+
+    const newConv: Conversation = {
+      id: convId,
+      organizationId: '11111111-1111-4111-8111-111111111111',
+      channelId: isWa ? '22222222-2222-4222-8222-222222222222' : '33333333-3333-4333-8333-333333333333',
+      contact: newContact,
+      channelType: channelType,
+      status: 'open',
+      priority: 'medium',
+      aiEnabled: true,
+      aiStatus: 'active',
+      assignedAgent: currentUser,
+      unreadCount: 0,
+      lastMessageSnippet: initialMessage || 'Conversa iniciada',
+      lastMessageAt: timeStr,
+      lastMessageTimestamp: now
+    };
+
+    setContacts((prev) => [newContact, ...prev]);
+    setConversations((prev) => {
+      const updated = [newConv, ...prev];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+
+    setActiveConversationId(convId);
+
+    if (initialMessage && initialMessage.trim()) {
+      const firstMsg: Message = {
+        id: `msg-agent-${now}`,
+        conversationId: convId,
+        senderType: 'agent',
+        senderId: currentUser.id,
+        senderName: currentUser.fullName,
+        content: initialMessage.trim(),
+        messageType: 'text',
+        deliveryStatus: 'delivered',
+        timestamp: timeStr
+      };
+
+      setMessages((prev) => {
+        const updated = {
+          ...prev,
+          [convId]: [firstMsg]
+        };
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('moonky_messages_v4', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
+
+      // Despachar para o WhatsApp via WAME API
+      try {
+        let instKey = '';
+        if (typeof window !== 'undefined') {
+          try {
+            const savedCreds = localStorage.getItem('moonky_wame_credentials');
+            if (savedCreds) {
+              instKey = JSON.parse(savedCreds).instanceKey || '';
+            }
+          } catch {}
+        }
+        if (!instKey) {
+          const wa = channels.find((c) => c.type === 'whatsapp');
+          instKey = wa?.instanceKey || '';
+        }
+
+        fetch('/api/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: convId,
+            content: initialMessage.trim(),
+            recipient: cleanTarget,
+            instanceKey: instKey
+          })
+        }).catch((e) => console.log('Outgoing dispatch recorded', e));
+      } catch (e) {
+        // non-blocking
+      }
+    }
+
+    return convId;
   };
 
   /**
@@ -936,6 +1206,10 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         setSearchQuery,
         filteredConversations,
         setActiveConversationId,
+        currentUser,
+        updateCurrentUser,
+        syncWithWame,
+        startNewConversation,
         sendMessage,
         simulateCustomerIncomingMessage,
         updateConversationStatus,

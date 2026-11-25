@@ -37,7 +37,7 @@ const PRODUCTION_WEBHOOK_URL = 'https://moonkychat.vercel.app/api/webhooks/wame'
 const DEFAULT_SERVER_URL = 'https://server.wame.api.br';
 
 export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProps) {
-  const { channels, updateChannel, simulateCustomerIncomingMessage } = useMoonky();
+  const { channels, updateChannel, simulateCustomerIncomingMessage, updateCurrentUser, syncWithWame } = useMoonky();
 
   const [activeTab, setActiveTab] = useState<'whatsapp' | 'instagram' | 'credentials'>('whatsapp');
   const [copiedWebhook, setCopiedWebhook] = useState(false);
@@ -122,7 +122,14 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
             const rawPhone = data.user.id.split('@')[0];
             setTestNumber(rawPhone ? `+${rawPhone}` : testNumber);
           }
+          if (data.user.imageProfile || data.user.name) {
+            updateCurrentUser({
+              fullName: data.user.name || undefined,
+              avatarUrl: data.user.imageProfile || undefined
+            });
+          }
         }
+        syncWithWame(keyToUse);
       } else {
         if (data.image) {
           setQrImage(data.image);
@@ -401,9 +408,23 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
             {isWaConnected ? (
               // Connected State
               <div className="bg-[#FAFBFB] dark:bg-[#181F1B] border border-[#E5E9E7] dark:border-[#262E2A] rounded-3xl p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-[#EAFBF2] text-[#1E7E49] mx-auto flex items-center justify-center">
-                  <CheckCircle2 className="w-8 h-8 text-[#45D483]" />
-                </div>
+                {connectedUser?.imageProfile ? (
+                  <div className="relative w-16 h-16 mx-auto">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={connectedUser.imageProfile}
+                      alt={connectedUser.name || 'WhatsApp Foto'}
+                      className="w-16 h-16 rounded-full object-cover ring-4 ring-[#45D483] ring-offset-2 shadow-md mx-auto"
+                    />
+                    <span className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#45D483] ring-2 ring-white flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#252B28]" />
+                    </span>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-[#EAFBF2] text-[#1E7E49] mx-auto flex items-center justify-center">
+                    <CheckCircle2 className="w-8 h-8 text-[#45D483]" />
+                  </div>
+                )}
                 <div>
                   <h3 className="text-base font-bold text-[#252B28] dark:text-[#F3F6F4]">WhatsApp Conectado com Sucesso!</h3>
                   <p className="text-xs text-[#AEB7B3] mt-1">
