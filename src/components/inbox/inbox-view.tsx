@@ -135,7 +135,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     const url =
       typeof window !== 'undefined'
         ? `${window.location.origin}/api/webhooks/wame`
-        : 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame';
+        : 'https://moonkychat.vercel.app/api/webhooks/wame';
     navigator.clipboard.writeText(url);
     setCopiedWebhook(true);
     setTimeout(() => setCopiedWebhook(false), 2000);
@@ -1633,7 +1633,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     </button>
                   </div>
                   <div className="bg-white dark:bg-[#121614] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-[11px] font-mono text-[#252B28] dark:text-gray-200 truncate select-all">
-                    https://moonkywpp-e9w2.vercel.app/api/webhooks/wame
+                    https://moonkychat.vercel.app/api/webhooks/wame
                   </div>
                   <p className="text-[10px] text-[#6C7671] dark:text-[#AEB7B3]">
                     Cadastre este endpoint no painel da WAME após assinar para receber mensagens, fotos, vídeos, áudios e documentos reais diretamente aqui.

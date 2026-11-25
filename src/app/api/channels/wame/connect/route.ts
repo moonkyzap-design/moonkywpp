@@ -4,10 +4,11 @@ import { WameClient } from '@/lib/wame/client';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const instanceKey = body.instanceKey || process.env.WAME_DEFAULT_INSTANCE_KEY;
+    const instanceKey = (body.instanceKey || process.env.WAME_DEFAULT_INSTANCE_KEY || '').trim();
+    const baseUrl = body.baseUrl || process.env.WAME_API_BASE_URL;
     const channelType = body.channelType || 'whatsapp';
 
-    const client = new WameClient(instanceKey);
+    const client = new WameClient(instanceKey, baseUrl);
 
     if (channelType === 'instagram') {
       // Instagram Official Meta OAuth / Embedded Signup flow (https://wame.api.br/oficial)
@@ -21,29 +22,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // WhatsApp flow (QR Code or live status)
-    if (client.isConfigured()) {
-      const connectRes = await client.connectInstance();
-      return NextResponse.json({
-        success: true,
-        channelType: 'whatsapp',
-        status: connectRes.data?.status || 'qrcode_ready',
-        qrcode: connectRes.data?.qrcode,
-        instanceKey,
-        instructions: 'Abra o WhatsApp no seu celular > Configurações / Aparelhos Conectados > Conectar um aparelho e aponte para o QR Code.'
-      });
-    }
-
-    // Setup mode / Pre-payment Sandbox QR Code
-    // Generates high-fidelity SVG/base64 QR Code string for immediate UX preview
-    const sampleQr = `WAME_AUTH_QR_${instanceKey || 'MOONKY'}_${Date.now()}`;
+    // WhatsApp flow (Real QR Code or live status)
+    const connectRes = await client.connectInstance();
+    const connectData = connectRes.data;
 
     return NextResponse.json({
       success: true,
       channelType: 'whatsapp',
-      status: 'qrcode_ready',
-      qrcode: sampleQr,
-      isPrePaymentSetup: true,
+      status: connectData?.status || 'qrcode_ready',
+      phoneConnected: connectData?.phoneConnected || false,
+      qrcode: connectData?.qrcode,
+      image: connectData?.image,
+      user: connectData?.user,
       instanceKey: instanceKey || 'WAME_PROD_INSTANCE_8941',
       instructions: 'Abra o WhatsApp no seu celular > Configurações / Aparelhos Conectados > Conectar um aparelho e aponte para o QR Code.'
     });

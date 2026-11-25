@@ -145,7 +145,7 @@ In the Vercel dashboard:
 1. Set the environment variables from your `.env.local`.
 2. Configure your custom domain.
 3. In WAME Dashboard (`https://wame.api.br`), set your Webhook URL to:
-   `https://your-domain.vercel.app/api/webhooks/wame` with format `meta`.
+   `https://moonkychat.vercel.app/api/webhooks/wame` with format `meta`.
 
 ---
 

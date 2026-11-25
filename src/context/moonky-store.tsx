@@ -217,6 +217,29 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         document.documentElement.classList.add('dark');
       }
 
+      // Carregar credenciais salvas da WAME API
+      try {
+        const savedCreds = localStorage.getItem('moonky_wame_credentials');
+        if (savedCreds) {
+          const parsed = JSON.parse(savedCreds);
+          if (parsed.instanceKey) {
+            setChannels((prev) =>
+              prev.map((ch) =>
+                ch.type === 'whatsapp'
+                  ? {
+                      ...ch,
+                      instanceKey: parsed.instanceKey,
+                      webhookUrl: parsed.webhookUrl || 'https://moonkychat.vercel.app/api/webhooks/wame'
+                    }
+                  : ch
+              )
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load saved WAME credentials from localStorage', err);
+      }
+
       // Limpar caches legados de demonstração para garantir dados 100% reais e limpos
       try {
         localStorage.removeItem('moonky_messages_v4');
@@ -653,6 +676,24 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
 
   const updateChannel = (channelId: string, updated: Partial<Channel>) => {
     setChannels((prev) => prev.map((ch) => (ch.id === channelId ? { ...ch, ...updated } : ch)));
+
+    if (typeof window !== 'undefined' && (updated.instanceKey || updated.webhookUrl)) {
+      try {
+        const existing = JSON.parse(localStorage.getItem('moonky_wame_credentials') || '{}');
+        localStorage.setItem(
+          'moonky_wame_credentials',
+          JSON.stringify({
+            ...existing,
+            ...(updated.instanceKey ? { instanceKey: updated.instanceKey } : {}),
+            ...(updated.webhookUrl ? { webhookUrl: updated.webhookUrl } : {}),
+            updatedAt: new Date().toISOString()
+          })
+        );
+      } catch (e) {
+        console.warn('Failed to update credentials in localStorage', e);
+      }
+    }
+
     if (supabase && isSupabaseConfigured()) {
       const dbChannelId = channelId.includes('wa')
         ? '22222222-2222-4222-8222-222222222222'

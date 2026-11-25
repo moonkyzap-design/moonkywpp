@@ -46,7 +46,7 @@ export const initialChannels: Channel[] = [
     isOfficial: true,
     phoneNumber: '',
     status: 'disconnected',
-    webhookUrl: 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame',
+    webhookUrl: 'https://moonkychat.vercel.app/api/webhooks/wame',
     lastSyncAt: undefined
   },
   {
@@ -59,7 +59,7 @@ export const initialChannels: Channel[] = [
     isOfficial: true,
     instagramUsername: '',
     status: 'disconnected',
-    webhookUrl: 'https://moonkywpp-e9w2.vercel.app/api/webhooks/wame',
+    webhookUrl: 'https://moonkychat.vercel.app/api/webhooks/wame',
     lastSyncAt: undefined
   }
 ];

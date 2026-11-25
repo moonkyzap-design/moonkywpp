@@ -2,9 +2,30 @@
 // WAME API INTEGRATION TYPES (https://wame.api.br/docs)
 // ===================================================================
 
+export interface WameCredentials {
+  instanceKey: string;
+  baseUrl?: string;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  updatedAt?: string;
+}
+
+export interface WameConnectResult {
+  qrcode?: string;
+  image?: string;
+  status: 'connected' | 'disconnected' | 'connecting' | 'qrcode_ready';
+  phoneConnected?: boolean;
+  user?: {
+    id?: string;
+    name?: string;
+    lid?: string;
+    imageProfile?: string;
+  } | null;
+}
+
 export interface WameInstanceStatus {
   status: number;
-  data: {
+  data?: {
     instanceKey: string;
     phone?: string;
     name?: string;
@@ -12,8 +33,28 @@ export interface WameInstanceStatus {
     official: boolean; // true = Meta Cloud API; false = Unofficial QR
     provider: 'whatsapp' | 'instagram' | 'messenger';
     qrcode?: string;
+    image?: string;
     battery?: number;
     platform?: string;
+    user?: {
+      id?: string;
+      name?: string;
+      imageProfile?: string;
+    };
+  };
+  instance?: {
+    phoneConnected?: boolean;
+    user?: {
+      id?: string;
+      lid?: string;
+      name?: string;
+      imageProfile?: string;
+    };
+    webhook?: {
+      allowWebhook?: boolean;
+      webhookMessage?: string;
+      webhookFormat?: string;
+    };
   };
 }
 

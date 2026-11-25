@@ -72,14 +72,54 @@ export function IntegrationsView() {
     setTestingConnection(false);
   };
 
-  const handleSaveChannel = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveChannel = async () => {
     if (!selectedChannel) return;
+    setIsSaving(true);
+    const targetWebhook = selectedChannel.webhookUrl || 'https://moonkychat.vercel.app/api/webhooks/wame';
+
     updateChannel(selectedChannel.id, {
       instanceKey: activeInstanceKey,
       isOfficial: isOfficialMeta,
+      webhookUrl: targetWebhook,
       lastSyncAt: 'Agora há pouco'
     });
-    alert('Configurações do canal salvas com sucesso.');
+
+    if (typeof window !== 'undefined') {
+      try {
+        const existing = JSON.parse(localStorage.getItem('moonky_wame_credentials') || '{}');
+        localStorage.setItem(
+          'moonky_wame_credentials',
+          JSON.stringify({
+            ...existing,
+            instanceKey: activeInstanceKey,
+            webhookUrl: targetWebhook,
+            updatedAt: new Date().toISOString()
+          })
+        );
+      } catch (e) {
+        console.warn('Error saving to localStorage', e);
+      }
+    }
+
+    try {
+      if (activeInstanceKey) {
+        await fetch('/api/channels/wame/credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instanceKey: activeInstanceKey,
+            webhookUrl: targetWebhook
+          })
+        });
+      }
+      alert('Configurações do canal e credenciais WAME salvas com sucesso.');
+    } catch (e) {
+      alert('Configurações do canal salvas localmente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
