@@ -5,6 +5,26 @@
 // ===================================================================
 
 import { Conversation, Message } from '@/types';
+import fs from 'fs';
+
+const DISK_CONFIG_PATH = '/tmp/moonky_wame_config.json';
+
+function readDiskConfig(): { instanceKey?: string; baseUrl?: string } {
+  try {
+    if (fs.existsSync(DISK_CONFIG_PATH)) {
+      const content = fs.readFileSync(DISK_CONFIG_PATH, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch {}
+  return {};
+}
+
+function writeDiskConfig(data: { instanceKey?: string; baseUrl?: string }) {
+  try {
+    const existing = readDiskConfig();
+    fs.writeFileSync(DISK_CONFIG_PATH, JSON.stringify({ ...existing, ...data }), 'utf-8');
+  } catch {}
+}
 
 export interface LiveMessageEvent {
   id: string;
@@ -39,6 +59,8 @@ declare global {
   var __moonkySyncedConversations: Conversation[] | undefined;
   // eslint-disable-next-line no-var
   var __moonkyContactPictures: Record<string, string> | undefined;
+  // eslint-disable-next-line no-var
+  var __moonkyLastInstanceKey: string | undefined;
 }
 
 if (!globalThis.__moonkyLiveEvents) {
@@ -49,7 +71,30 @@ if (!globalThis.__moonkyContactPictures) {
 }
 
 export const liveStore = {
+  setLastInstanceKey(key: string) {
+    const clean = (key || '').trim();
+    if (clean && clean !== 'WAME_PROD_INSTANCE_8941') {
+      globalThis.__moonkyLastInstanceKey = clean;
+      writeDiskConfig({ instanceKey: clean });
+    }
+  },
+
+  getLastInstanceKey(): string | undefined {
+    if (globalThis.__moonkyLastInstanceKey && globalThis.__moonkyLastInstanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      return globalThis.__moonkyLastInstanceKey;
+    }
+    const disk = readDiskConfig();
+    if (disk.instanceKey && disk.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      globalThis.__moonkyLastInstanceKey = disk.instanceKey;
+      return disk.instanceKey;
+    }
+    return undefined;
+  },
+
   addEvent(event: LiveMessageEvent) {
+    if (event.instanceKey && event.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      this.setLastInstanceKey(event.instanceKey);
+    }
     if (!globalThis.__moonkyLiveEvents) {
       globalThis.__moonkyLiveEvents = [];
     }

@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WameClient } from '@/lib/wame/client';
+import { liveStore } from '@/lib/wame/live-store';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const instanceKey = (body.instanceKey || process.env.WAME_DEFAULT_INSTANCE_KEY || '').trim();
+    let instanceKey = (body.instanceKey || '').trim();
+
+    if (!instanceKey || instanceKey === 'WAME_PROD_INSTANCE_8941') {
+      instanceKey = liveStore.getLastInstanceKey() || process.env.WAME_DEFAULT_INSTANCE_KEY || '';
+    }
+
+    if (instanceKey && instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      liveStore.setLastInstanceKey(instanceKey);
+    }
+
     const baseUrl = body.baseUrl || process.env.WAME_API_BASE_URL;
     const channelType = body.channelType || 'whatsapp';
 

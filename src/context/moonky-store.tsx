@@ -231,16 +231,37 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
             });
           }
 
-          // 2. Atualizar status de conexão do canal WhatsApp
-          if (data.connected) {
+          // 2. Atualizar status de conexão e instanceKey do canal WhatsApp
+          if (data.instanceKey && data.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+            if (typeof window !== 'undefined') {
+              try {
+                const saved = localStorage.getItem('moonky_wame_credentials');
+                const parsed = saved ? JSON.parse(saved) : {};
+                if (parsed.instanceKey !== data.instanceKey) {
+                  localStorage.setItem(
+                    'moonky_wame_credentials',
+                    JSON.stringify({
+                      ...parsed,
+                      instanceKey: data.instanceKey,
+                      baseUrl: parsed.baseUrl || 'https://server.wame.api.br',
+                      webhookUrl: parsed.webhookUrl || 'https://moonkychat.vercel.app/api/webhooks/wame'
+                    })
+                  );
+                }
+              } catch {}
+            }
+          }
+
+          if (data.connected || data.instanceKey) {
             setChannels((prev) =>
               prev.map((ch) =>
                 ch.type === 'whatsapp'
                   ? {
                       ...ch,
-                      status: 'connected',
+                      status: data.connected ? 'connected' : ch.status,
+                      instanceKey: (data.instanceKey && data.instanceKey !== 'WAME_PROD_INSTANCE_8941') ? data.instanceKey : ch.instanceKey,
                       phoneNumber: data.user?.phone || ch.phoneNumber,
-                      lastSyncAt: 'Agora'
+                      lastSyncAt: data.connected ? 'Agora' : ch.lastSyncAt
                     }
                   : ch
               )
@@ -560,11 +581,26 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         instKey = wa?.instanceKey || '';
       }
 
-      const targetRecipient =
-        activeConversation?.contact.phone ||
-        activeConversation?.contact.name ||
-        activeConversation?.contact.instagramUsername ||
-        '';
+      let targetRecipient = '';
+      if (activeConversation?.channelType === 'instagram') {
+        targetRecipient =
+          activeConversation.contact.instagramUsername ||
+          activeConversation.contact.name ||
+          '';
+      } else {
+        const rawPhone = activeConversation?.contact.phone || '';
+        const idDigits = activeConversation?.id?.replace(/^conv-/, '')?.replace(/\D/g, '') || '';
+        const cntDigits = activeConversation?.contact.id?.replace(/^cnt-/, '')?.replace(/\D/g, '') || '';
+        const nameDigits = activeConversation?.contact.name?.replace(/\D/g, '') || '';
+
+        targetRecipient =
+          rawPhone.replace(/\D/g, '') ||
+          (idDigits.length >= 8 ? idDigits : '') ||
+          (cntDigits.length >= 8 ? cntDigits : '') ||
+          (nameDigits.length >= 8 ? nameDigits : '') ||
+          activeConversation?.contact.name ||
+          '';
+      }
 
       fetch('/api/messages/send', {
         method: 'POST',
@@ -577,7 +613,34 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           baseUrl,
           channelType: activeConversation?.channelType || 'whatsapp'
         })
-      }).catch((e) => console.log('Outgoing dispatch recorded', e));
+      })
+        .then(async (r) => {
+          const resData = await r.json().catch(() => ({}));
+          console.log('[MOONKY_DISPATCH_RESULT]', r.status, resData);
+          if (!r.ok || resData.error || (resData.status && resData.status >= 400)) {
+            console.error('[MOONKY_DISPATCH_FAILED]', resData.error || resData.message);
+            setMessages((prev) => {
+              const current = prev[activeConversationId] || [];
+              return {
+                ...prev,
+                [activeConversationId]: current.map((m) =>
+                  m.id === newMsg.id ? { ...m, deliveryStatus: 'failed' } : m
+                )
+              };
+            });
+          } else {
+            setMessages((prev) => {
+              const current = prev[activeConversationId] || [];
+              return {
+                ...prev,
+                [activeConversationId]: current.map((m) =>
+                  m.id === newMsg.id ? { ...m, deliveryStatus: 'delivered' } : m
+                )
+              };
+            });
+          }
+        })
+        .catch((e) => console.log('Outgoing dispatch recorded', e));
     } catch (e) {
       // non-blocking
     }

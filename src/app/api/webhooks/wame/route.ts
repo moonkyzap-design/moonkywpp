@@ -29,7 +29,17 @@ export async function POST(req: NextRequest) {
 
     const provider = payload.provider || (payload.object === 'instagram' ? 'instagram' : 'whatsapp');
     const isOfficial = payload.official ?? true;
-    const instanceId = payload.instance || payload.instanceKey || payload.data?.instanceKey;
+    const instanceId =
+      payload.instance ||
+      payload.instanceKey ||
+      payload.data?.instanceKey ||
+      payload.data?.instance ||
+      payload.entry?.[0]?.id ||
+      payload.phone_number_id;
+
+    if (instanceId && typeof instanceId === 'string' && instanceId !== 'WAME_PROD_INSTANCE_8941') {
+      liveStore.setLastInstanceKey(instanceId);
+    }
     const channelId = provider === 'instagram' ? IG_CHANNEL_UUID : WA_CHANNEL_UUID;
 
     // 0. Processar eventos nativos de conexão WAME (ex: connection.update, status.instance)

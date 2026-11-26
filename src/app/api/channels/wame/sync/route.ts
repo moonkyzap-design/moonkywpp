@@ -32,11 +32,18 @@ async function handleSync(req: NextRequest) {
       baseUrl = body.baseUrl || '';
     }
 
-    if (!instanceKey) {
-      instanceKey = process.env.WAME_DEFAULT_INSTANCE_KEY || '';
+    if (!instanceKey || instanceKey === 'WAME_PROD_INSTANCE_8941') {
+      instanceKey =
+        liveStore.getLastInstanceKey() ||
+        liveStore.getEvents().find((e) => e.instanceKey && e.instanceKey !== 'WAME_PROD_INSTANCE_8941')?.instanceKey ||
+        process.env.WAME_DEFAULT_INSTANCE_KEY ||
+        '';
     }
 
     instanceKey = instanceKey.trim();
+    if (instanceKey && instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      liveStore.setLastInstanceKey(instanceKey);
+    }
 
     // In-memory profile & live events
     const cachedProfile = liveStore.getProfile();
@@ -338,6 +345,7 @@ async function handleSync(req: NextRequest) {
     return NextResponse.json({
       success: true,
       connected,
+      instanceKey: instanceKey || liveStore.getLastInstanceKey() || '',
       user: userProfile,
       conversations,
       messages: messagesRecord,

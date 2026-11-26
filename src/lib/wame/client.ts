@@ -280,13 +280,16 @@ export class WameClient {
       };
     }
 
-    const payload = {
+    const payload: Record<string, any> = {
       to: targetTo,
-      text: text.trim(),
-      provider
+      text: text.trim()
     };
+    if (provider === 'instagram') {
+      payload.provider = 'instagram';
+    }
 
     try {
+      console.log(`[WAME_DISPATCH] Sending text to ${targetTo} via ${this.baseUrl}/${this.instanceKey}/message/text`);
       const response = await fetch(`${this.baseUrl}/${this.instanceKey}/message/text`, {
         method: 'POST',
         headers: {
@@ -298,10 +301,11 @@ export class WameClient {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
+      const isSuccess = response.ok && (!result.status || result.status < 400) && !result.error;
+      if (!isSuccess) {
         console.error('[WAME_SEND_TEXT_ERROR]', response.status, result);
         return {
-          status: response.status,
+          status: result.status || (response.ok ? 400 : response.status),
           error: result.error || 'WAME_SEND_FAILED',
           message: result.message || `Failed to dispatch message through WAME (HTTP ${response.status}).`
         };
@@ -315,6 +319,7 @@ export class WameClient {
       };
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Network error';
+      console.error('[WAME_DISPATCH_EXCEPTION]', errorMessage);
       return {
         status: 500,
         error: 'NETWORK_ERROR',

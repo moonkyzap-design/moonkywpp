@@ -71,7 +71,7 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
 
   const [testNumber, setTestNumber] = useState('+55 11 98877-6655');
 
-  // Load saved credentials from localStorage on mount
+  // Load saved credentials from localStorage on mount & auto-sync detected key
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -82,14 +82,25 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
           if (parsed.baseUrl) setServerUrlInput(parsed.baseUrl);
           if (parsed.webhookUrl) setWebhookUrlInput(parsed.webhookUrl);
           if (parsed.webhookSecret) setWebhookSecretInput(parsed.webhookSecret);
-        } else if (waChannel?.instanceKey) {
+        } else if (waChannel?.instanceKey && waChannel.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
           setInstanceKeyInput(waChannel.instanceKey);
         }
       } catch (e) {
         console.warn('Error reading saved WAME credentials from localStorage', e);
       }
     }
-  }, [waChannel?.instanceKey]);
+
+    if (isOpen) {
+      fetch('/api/channels/wame/sync')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.instanceKey && d.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+            setInstanceKeyInput(d.instanceKey);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, waChannel?.instanceKey]);
 
   // Fetch real QR Code from backend / WAME API
   const fetchRealQrCode = useCallback(async (customKey?: string) => {

@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { WameClient } from '@/lib/wame/client';
+import { liveStore } from '@/lib/wame/live-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,10 @@ export async function POST(req: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    if (instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+      liveStore.setLastInstanceKey(instanceKey);
     }
 
     const client = new WameClient(instanceKey, baseUrl);
