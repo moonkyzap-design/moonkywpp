@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     let instanceKey = (body.instanceKey || '').trim();
 
     if (!instanceKey || instanceKey === 'WAME_PROD_INSTANCE_8941') {
-      instanceKey = liveStore.getLastInstanceKey() || process.env.WAME_DEFAULT_INSTANCE_KEY || '';
+      instanceKey = liveStore.getLastInstanceKey() || process.env.WAME_DEFAULT_INSTANCE_KEY || '5575xf6381291bf';
     }
 
     if (instanceKey && instanceKey !== 'WAME_PROD_INSTANCE_8941') {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       qrcode: connectData?.qrcode,
       image: connectData?.image,
       user: connectData?.user,
-      instanceKey: instanceKey || 'WAME_PROD_INSTANCE_8941',
+      instanceKey: instanceKey || '5575xf6381291bf',
       instructions: 'Abra o WhatsApp no seu celular > Configurações / Aparelhos Conectados > Conectar um aparelho e aponte para o QR Code.'
     });
   } catch (error: unknown) {

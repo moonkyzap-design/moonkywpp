@@ -88,7 +88,7 @@ export const liveStore = {
       globalThis.__moonkyLastInstanceKey = disk.instanceKey;
       return disk.instanceKey;
     }
-    return undefined;
+    return process.env.WAME_DEFAULT_INSTANCE_KEY || '5575xf6381291bf';
   },
 
   addEvent(event: LiveMessageEvent) {

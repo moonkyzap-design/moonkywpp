@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         liveStore.getLastInstanceKey() ||
         liveStore.getEvents().find((e) => e.instanceKey && e.instanceKey !== 'WAME_PROD_INSTANCE_8941')?.instanceKey ||
         process.env.WAME_DEFAULT_INSTANCE_KEY ||
-        '';
+        '5575xf6381291bf';
     }
 
     if (!content || !recipient) {
@@ -31,7 +31,12 @@ export async function POST(req: NextRequest) {
     }
 
     const isInstagram = channelType === 'instagram';
-    const cleanTo = isInstagram ? String(recipient).trim() : String(recipient).replace(/@.*$/, '').replace(/\D/g, '');
+    const isSpecial = String(recipient).includes('@lid') || String(recipient).includes('@g.us');
+    const cleanTo = isInstagram
+      ? String(recipient).trim()
+      : isSpecial
+      ? String(recipient).trim()
+      : String(recipient).replace(/@.*$/, '').replace(/\D/g, '') || String(recipient).trim();
 
     if (!cleanTo) {
       return NextResponse.json(

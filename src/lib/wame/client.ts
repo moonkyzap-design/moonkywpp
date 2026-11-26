@@ -12,7 +12,11 @@ export class WameClient {
 
   constructor(instanceKey?: string, baseUrl?: string) {
     this.baseUrl = (baseUrl || process.env.WAME_API_BASE_URL || 'https://server.wame.api.br').replace(/\/+$/, '');
-    this.instanceKey = (instanceKey || process.env.WAME_DEFAULT_INSTANCE_KEY || '').trim();
+    const resolvedKey =
+      !instanceKey || instanceKey === 'WAME_PROD_INSTANCE_8941'
+        ? process.env.WAME_DEFAULT_INSTANCE_KEY || '5575xf6381291bf'
+        : instanceKey;
+    this.instanceKey = resolvedKey.trim();
   }
 
   public isConfigured(): boolean {
@@ -269,8 +273,9 @@ export class WameClient {
       };
     }
 
-    const cleanNumber = to.replace(/@.*$/, '').replace(/\D/g, '');
-    const targetTo = provider === 'whatsapp' ? cleanNumber : to.trim();
+    const isSpecial = to.includes('@lid') || to.includes('@g.us');
+    const cleanNumber = isSpecial ? to.trim() : to.replace(/@.*$/, '').replace(/\D/g, '');
+    const targetTo = provider === 'whatsapp' ? (cleanNumber || to.trim()) : to.trim();
 
     if (!targetTo) {
       return {
@@ -332,7 +337,15 @@ export class WameClient {
    * Fetch specific contact information and real WhatsApp profile photo
    * Endpoint: GET https://server.wame.api.br/{KEY}/contacts/{number}
    */
-  async getContact(number: string): Promise<{ id?: string; name?: string; notify?: string; imgUrl?: string } | null> {
+  async getContact(number: string): Promise<{
+    id?: string;
+    phone?: string;
+    lid?: string;
+    name?: string;
+    notify?: string;
+    imgUrl?: string;
+    description?: string;
+  } | null> {
     if (!this.instanceKey || !number) return null;
     const cleanNumber = number.replace(/@.*$/, '').replace(/\D/g, '');
     if (!cleanNumber) return null;
@@ -341,20 +354,33 @@ export class WameClient {
       // 1. Try GET /{KEY}/contacts/{number}
       const response = await fetch(`${this.baseUrl}/${this.instanceKey}/contacts/${cleanNumber}`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         cache: 'no-store'
       });
 
       if (response.ok) {
         const json = await response.json().catch(() => ({}));
-        const data = json.data || json;
-        const photo = data?.imgUrl || data?.image || data?.profilePictureUrl;
-        if (photo || data?.name || data?.notify) {
+        const prof = json.profile || json.data?.profile || json.data || json;
+        const photo =
+          prof?.pictureUrl ||
+          prof?.imageProfile ||
+          prof?.imgUrl ||
+          prof?.image ||
+          prof?.profilePictureUrl;
+
+        const name = prof?.name || prof?.notify || prof?.pushName;
+        const phone = prof?.phoneNumber || cleanNumber;
+        const lid = prof?.lid;
+        const desc = prof?.businessProfile?.description;
+
+        if (photo || name || lid) {
           return {
-            id: data.id || `${cleanNumber}@s.whatsapp.net`,
-            name: data.name || data.notify,
-            notify: data.notify,
-            imgUrl: photo
+            id: prof?.jid || `${cleanNumber}@s.whatsapp.net`,
+            phone,
+            lid,
+            name,
+            imgUrl: photo,
+            description: desc
           };
         }
       }
@@ -364,17 +390,18 @@ export class WameClient {
         `${this.baseUrl}/${this.instanceKey}/chat/profile-picture?jid=${encodeURIComponent(`${cleanNumber}@s.whatsapp.net`)}`,
         {
           method: 'GET',
-          headers: { 'Accept': 'application/json' },
+          headers: { Accept: 'application/json' },
           cache: 'no-store'
         }
       );
 
       if (picRes.ok) {
         const picJson = await picRes.json().catch(() => ({}));
-        const photo = picJson.profilePictureUrl || picJson.image || picJson.imgUrl || picJson.data?.imgUrl;
+        const photo = picJson.profilePictureUrl || picJson.pictureUrl || picJson.image || picJson.imgUrl || picJson.data?.imgUrl;
         if (photo) {
           return {
             id: `${cleanNumber}@s.whatsapp.net`,
+            phone: cleanNumber,
             imgUrl: photo
           };
         }
@@ -405,7 +432,7 @@ export class WameClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          Accept: 'application/json'
         },
         body: JSON.stringify(req)
       });
@@ -424,22 +451,45 @@ export class WameClient {
    * Fetch active chats list from WAME
    * Endpoint: GET https://server.wame.api.br/{KEY}/chat
    */
-  async getChats(): Promise<Array<{ id: string; name?: string; timestamp?: number; unreadCount?: number }>> {
+  async getChats(): Promise<Array<{
+    id: string;
+    chatId: string;
+    name?: string;
+    phone?: string;
+    timestamp?: number;
+    unreadCount?: number;
+    channel?: string;
+  }>> {
     if (!this.instanceKey) return [];
     try {
       const response = await fetch(`${this.baseUrl}/${this.instanceKey}/chat`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         cache: 'no-store'
       });
       if (!response.ok) return [];
       const json = await response.json();
-      if (Array.isArray(json)) return json;
-      if (Array.isArray(json?.data)) return json.data;
-      if (Array.isArray(json?.chats)) return json.chats;
-      if (Array.isArray(json?.data?.chats)) return json.data.chats;
-      if (Array.isArray(json?.result)) return json.result;
-      return [];
+      const list = json?.chats || json?.data?.chats || json?.data || json?.result || (Array.isArray(json) ? json : []);
+      if (!Array.isArray(list)) return [];
+
+      return list.map((c: any) => {
+        const rawId = c.chatId || c.id || '';
+        const phone = c.contact?.phone || rawId.replace(/@.*$/, '').replace(/\D/g, '');
+        const name = c.contact?.name || c.name || '';
+        const ts = c.lastMessageTimestamp
+          ? Math.floor(Number(c.lastMessageTimestamp) / (Number(c.lastMessageTimestamp) > 10000000000 ? 1000 : 1))
+          : (c.timestamp || 0);
+
+        return {
+          id: rawId,
+          chatId: rawId,
+          name,
+          phone,
+          timestamp: ts,
+          unreadCount: c.unreadCount || c.messageCount || 0,
+          channel: c.channel || 'whatsapp'
+        };
+      });
     } catch (err) {
       console.warn('[WAME_GET_CHATS_WARN]', err);
       return [];
@@ -450,25 +500,23 @@ export class WameClient {
    * Fetch messages for a specific chat from WAME
    * Endpoint: GET https://server.wame.api.br/{KEY}/chat/messages?chatId=...
    */
-  async getChatMessages(chatId: string, limit = 25): Promise<any[]> {
+  async getChatMessages(chatId: string, limit = 50): Promise<any[]> {
     if (!this.instanceKey || !chatId) return [];
     try {
+      const cleanJid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
       const response = await fetch(
-        `${this.baseUrl}/${this.instanceKey}/chat/messages?chatId=${encodeURIComponent(chatId)}&page=1&limit=${limit}`,
+        `${this.baseUrl}/${this.instanceKey}/chat/messages?chatId=${encodeURIComponent(cleanJid)}&page=1&limit=${limit}`,
         {
           method: 'GET',
-          headers: { 'Accept': 'application/json' },
+          headers: { Accept: 'application/json' },
           cache: 'no-store'
         }
       );
       if (!response.ok) return [];
       const json = await response.json();
-      if (Array.isArray(json)) return json;
-      if (Array.isArray(json?.data)) return json.data;
-      if (Array.isArray(json?.messages)) return json.messages;
-      if (Array.isArray(json?.data?.messages)) return json.data.messages;
-      if (Array.isArray(json?.result)) return json.result;
-      return [];
+      const list = json?.messages || json?.data?.messages || json?.data || (Array.isArray(json) ? json : []);
+      if (!Array.isArray(list)) return [];
+      return list;
     } catch (err) {
       console.warn('[WAME_GET_CHAT_MESSAGES_WARN]', err);
       return [];
@@ -479,22 +527,25 @@ export class WameClient {
    * Fetch contacts with profile pictures from WAME
    * Endpoint: GET https://server.wame.api.br/{KEY}/contacts
    */
-  async getContacts(): Promise<Array<{ id: string; name?: string; notify?: string; imgUrl?: string }>> {
+  async getContacts(): Promise<Array<{ id: string; number: string; name?: string; imgUrl?: string }>> {
     if (!this.instanceKey) return [];
     try {
       const response = await fetch(`${this.baseUrl}/${this.instanceKey}/contacts`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         cache: 'no-store'
       });
       if (!response.ok) return [];
       const json = await response.json();
-      if (Array.isArray(json)) return json;
-      if (Array.isArray(json?.data)) return json.data;
-      if (Array.isArray(json?.contacts)) return json.contacts;
-      if (Array.isArray(json?.data?.contacts)) return json.data.contacts;
-      if (Array.isArray(json?.result)) return json.result;
-      return [];
+      const list = json?.contacts || json?.data?.contacts || json?.data || (Array.isArray(json) ? json : []);
+      if (!Array.isArray(list)) return [];
+
+      return list.map((c: any) => ({
+        id: c.number || c.id || '',
+        number: c.number || c.id || '',
+        name: c.name || c.notify || '',
+        imgUrl: c.imgUrl || c.pictureUrl || c.image || ''
+      }));
     } catch (err) {
       console.warn('[WAME_GET_CONTACTS_WARN]', err);
       return [];

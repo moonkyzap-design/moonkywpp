@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
         .from('channels')
         .update({
           status: 'connected',
-          instance_key: instanceId || 'WAME_PROD_INSTANCE_8941',
+          instance_key: instanceId || '5575xf6381291bf',
           last_sync_at: new Date().toISOString()
         })
         .eq('id', channelId);

@@ -44,7 +44,7 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
   const [isLoading, setIsLoading] = useState(false);
 
   // WAME Credentials state
-  const [instanceKeyInput, setInstanceKeyInput] = useState('WAME_PROD_INSTANCE_8941');
+  const [instanceKeyInput, setInstanceKeyInput] = useState('5575xf6381291bf');
   const [serverUrlInput, setServerUrlInput] = useState(DEFAULT_SERVER_URL);
   const [webhookUrlInput, setWebhookUrlInput] = useState(PRODUCTION_WEBHOOK_URL);
   const [webhookSecretInput, setWebhookSecretInput] = useState('');
@@ -78,12 +78,18 @@ export function ChannelConnectModal({ isOpen, onClose }: ChannelConnectModalProp
         const saved = localStorage.getItem('moonky_wame_credentials');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.instanceKey) setInstanceKeyInput(parsed.instanceKey);
+          if (parsed.instanceKey && parsed.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
+            setInstanceKeyInput(parsed.instanceKey);
+          } else {
+            setInstanceKeyInput('5575xf6381291bf');
+          }
           if (parsed.baseUrl) setServerUrlInput(parsed.baseUrl);
           if (parsed.webhookUrl) setWebhookUrlInput(parsed.webhookUrl);
           if (parsed.webhookSecret) setWebhookSecretInput(parsed.webhookSecret);
         } else if (waChannel?.instanceKey && waChannel.instanceKey !== 'WAME_PROD_INSTANCE_8941') {
           setInstanceKeyInput(waChannel.instanceKey);
+        } else {
+          setInstanceKeyInput('5575xf6381291bf');
         }
       } catch (e) {
         console.warn('Error reading saved WAME credentials from localStorage', e);

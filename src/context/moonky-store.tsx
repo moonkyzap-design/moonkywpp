@@ -5,7 +5,7 @@
 // Handles real-time conversation state, AI handoff, CRM, and integrations
 // ===================================================================
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Conversation,
   Message,
@@ -287,12 +287,25 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
             });
           }
 
-          // 4. Atualizar mensagens
+          // 4. Atualizar mensagens com merge não destrutivo (nunca apaga mensagens enviadas na tela)
           if (data.messages && Object.keys(data.messages).length > 0) {
-            setMessages((prev) => ({
-              ...prev,
-              ...data.messages
-            }));
+            setMessages((prev) => {
+              const updated = { ...prev };
+              for (const [cId, incomingList] of Object.entries(data.messages as Record<string, Message[]>)) {
+                const currentList = updated[cId] || [];
+                const merged = [...currentList];
+                for (const inc of incomingList) {
+                  const idx = merged.findIndex((m) => m.id === inc.id);
+                  if (idx >= 0) {
+                    merged[idx] = { ...merged[idx], ...inc };
+                  } else {
+                    merged.push(inc);
+                  }
+                }
+                updated[cId] = merged;
+              }
+              return updated;
+            });
           }
         }
       }
@@ -375,19 +388,22 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         const savedCreds = localStorage.getItem('moonky_wame_credentials');
         if (savedCreds) {
           const parsed = JSON.parse(savedCreds);
-          if (parsed.instanceKey) {
-            setChannels((prev) =>
-              prev.map((ch) =>
-                ch.type === 'whatsapp'
-                  ? {
-                      ...ch,
-                      instanceKey: parsed.instanceKey,
-                      webhookUrl: parsed.webhookUrl || 'https://moonkychat.vercel.app/api/webhooks/wame'
-                    }
-                  : ch
-              )
-            );
-          }
+          const activeKey =
+            parsed.instanceKey && parsed.instanceKey !== 'WAME_PROD_INSTANCE_8941'
+              ? parsed.instanceKey
+              : '5575xf6381291bf';
+          setChannels((prev) =>
+            prev.map((ch) =>
+              ch.type === 'whatsapp'
+                ? {
+                    ...ch,
+                    status: 'connected',
+                    instanceKey: activeKey,
+                    webhookUrl: parsed.webhookUrl || 'https://moonkychat.vercel.app/api/webhooks/wame'
+                  }
+                : ch
+            )
+          );
         }
       } catch (err) {
         console.warn('Failed to load saved WAME credentials from localStorage', err);
@@ -426,7 +442,23 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     ? conversations.find((c) => c.id === activeConversationId) || null
     : null;
 
-  const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
+  const activeMessages = useMemo(() => {
+    if (!activeConversationId) return [];
+    const direct = messages[activeConversationId] || [];
+    const phone = activeConversation?.contact.phone?.replace(/\D/g, '');
+    let related: Message[] = [];
+    if (phone && `conv-${phone}` !== activeConversationId && messages[`conv-${phone}`]) {
+      related = messages[`conv-${phone}`];
+    }
+    if (related.length === 0) return direct;
+    const merged = [...direct];
+    for (const r of related) {
+      if (!merged.some((m) => m.id === r.id)) {
+        merged.push(r);
+      }
+    }
+    return merged;
+  }, [activeConversationId, messages, activeConversation]);
 
   // Helper to extract timestamp for ordering conversations by latest activity
   const getConversationTimeValue = (conv: Conversation): number => {
@@ -576,9 +608,12 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           }
         } catch {}
       }
-      if (!instKey) {
+      if (!instKey || instKey === 'WAME_PROD_INSTANCE_8941') {
         const wa = channels.find((c) => c.type === 'whatsapp');
-        instKey = wa?.instanceKey || '';
+        instKey =
+          wa?.instanceKey && wa.instanceKey !== 'WAME_PROD_INSTANCE_8941'
+            ? wa.instanceKey
+            : '5575xf6381291bf';
       }
 
       let targetRecipient = '';
@@ -589,13 +624,17 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           '';
       } else {
         const rawPhone = activeConversation?.contact.phone || '';
-        const idDigits = activeConversation?.id?.replace(/^conv-/, '')?.replace(/\D/g, '') || '';
-        const cntDigits = activeConversation?.contact.id?.replace(/^cnt-/, '')?.replace(/\D/g, '') || '';
+        const rawConvId = activeConversation?.id?.replace(/^conv-/, '') || '';
+        const rawCntId = activeConversation?.contact.id?.replace(/^cnt-/, '') || '';
+        const idDigits = rawConvId.replace(/\D/g, '');
+        const cntDigits = rawCntId.replace(/\D/g, '');
         const nameDigits = activeConversation?.contact.name?.replace(/\D/g, '') || '';
 
         targetRecipient =
           rawPhone.replace(/\D/g, '') ||
+          (rawConvId.includes('@lid') ? rawConvId : '') ||
           (idDigits.length >= 8 ? idDigits : '') ||
+          (rawCntId.includes('@lid') ? rawCntId : '') ||
           (cntDigits.length >= 8 ? cntDigits : '') ||
           (nameDigits.length >= 8 ? nameDigits : '') ||
           activeConversation?.contact.name ||

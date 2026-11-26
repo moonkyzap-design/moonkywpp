@@ -42,12 +42,12 @@ export const initialChannels: Channel[] = [
     name: 'WhatsApp Oficial',
     type: 'whatsapp',
     provider: 'wame',
-    instanceKey: '',
+    instanceKey: '5575xf6381291bf',
     isOfficial: true,
-    phoneNumber: '',
-    status: 'disconnected',
+    phoneNumber: '+55 21 99054-5858',
+    status: 'connected',
     webhookUrl: 'https://moonkychat.vercel.app/api/webhooks/wame',
-    lastSyncAt: undefined
+    lastSyncAt: 'Agora'
   },
   {
     id: 'chan-wame-ig-01',

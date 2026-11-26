@@ -86,6 +86,6 @@ export async function GET() {
     success: true,
     defaultWebhookUrl: DEFAULT_WEBHOOK_URL,
     defaultBaseUrl: DEFAULT_SERVER_URL,
-    defaultInstanceKey: process.env.WAME_DEFAULT_INSTANCE_KEY || 'WAME_PROD_INSTANCE_8941'
+    defaultInstanceKey: process.env.WAME_DEFAULT_INSTANCE_KEY || '5575xf6381291bf'
   });
 }
