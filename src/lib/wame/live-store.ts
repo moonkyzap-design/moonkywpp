@@ -37,10 +37,15 @@ declare global {
   var __moonkyLiveProfile: LiveProfile | undefined;
   // eslint-disable-next-line no-var
   var __moonkySyncedConversations: Conversation[] | undefined;
+  // eslint-disable-next-line no-var
+  var __moonkyContactPictures: Record<string, string> | undefined;
 }
 
 if (!globalThis.__moonkyLiveEvents) {
   globalThis.__moonkyLiveEvents = [];
+}
+if (!globalThis.__moonkyContactPictures) {
+  globalThis.__moonkyContactPictures = {};
 }
 
 export const liveStore = {
@@ -71,6 +76,22 @@ export const liveStore = {
 
   getProfile(): LiveProfile | undefined {
     return globalThis.__moonkyLiveProfile;
+  },
+
+  setContactPicture(phoneOrJid: string, url: string) {
+    if (!globalThis.__moonkyContactPictures) {
+      globalThis.__moonkyContactPictures = {};
+    }
+    const clean = phoneOrJid.replace(/@.*$/, '').replace(/\D/g, '');
+    if (clean && url) {
+      globalThis.__moonkyContactPictures[clean] = url;
+    }
+  },
+
+  getContactPicture(phoneOrJid: string): string | undefined {
+    if (!globalThis.__moonkyContactPictures) return undefined;
+    const clean = phoneOrJid.replace(/@.*$/, '').replace(/\D/g, '');
+    return globalThis.__moonkyContactPictures[clean];
   },
 
   setConversations(convs: Conversation[]) {

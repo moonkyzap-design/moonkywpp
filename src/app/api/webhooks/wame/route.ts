@@ -218,6 +218,10 @@ export async function POST(req: NextRequest) {
                   contactId = existingContact.id;
                 } else {
                   const newContactId = randomUUID();
+                  const realIgAvatar =
+                    (msg as any).profilePictureUrl ||
+                    liveStore.getContactPicture(senderIdentifier) ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(contactName)}&background=252B28&color=45D483`;
                   const { data: createdContact } = await supabase
                     .from('contacts')
                     .insert({
@@ -226,8 +230,7 @@ export async function POST(req: NextRequest) {
                       name: contactName,
                       instagram_username: senderIdentifier,
                       lead_status: 'lead',
-                      avatar_url:
-                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                      avatar_url: realIgAvatar
                     })
                     .select('id')
                     .single();
@@ -245,6 +248,12 @@ export async function POST(req: NextRequest) {
                   contactId = existingContact.id;
                 } else {
                   const newContactId = randomUUID();
+                  const cleanPhone = senderIdentifier.replace(/\D/g, '');
+                  const realWaAvatar =
+                    contactProfile?.profile?.picture ||
+                    contactProfile?.picture ||
+                    liveStore.getContactPicture(cleanPhone) ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(contactName || cleanPhone || 'Contato')}&background=252B28&color=45D483`;
                   const { data: createdContact } = await supabase
                     .from('contacts')
                     .insert({
@@ -253,8 +262,7 @@ export async function POST(req: NextRequest) {
                       name: contactName,
                       phone: senderIdentifier,
                       lead_status: 'lead',
-                      avatar_url:
-                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                      avatar_url: realWaAvatar
                     })
                     .select('id')
                     .single();

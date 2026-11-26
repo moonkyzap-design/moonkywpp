@@ -16,7 +16,7 @@ export class WameClient {
   }
 
   public isConfigured(): boolean {
-    return Boolean(this.instanceKey && this.instanceKey.trim().length > 0 && !this.instanceKey.includes('INSTANCE_8941'));
+    return Boolean(this.instanceKey && this.instanceKey.trim().length > 0);
   }
 
   public getKey(): string {
@@ -256,20 +256,34 @@ export class WameClient {
    * Send a text message to WhatsApp or Instagram
    * Endpoint: POST https://server.wame.api.br/{KEY}/message/text
    */
-  async sendTextMessage(to: string, text: string): Promise<WameApiResponse<{ messageId: string }>> {
+  async sendTextMessage(
+    to: string,
+    text: string,
+    provider: 'whatsapp' | 'instagram' = 'whatsapp'
+  ): Promise<WameApiResponse<{ messageId: string }>> {
     if (!this.instanceKey) {
       return {
         status: 400,
         error: 'WAME_UNCONFIGURED',
-        message: 'Cannot send live message: WAME Instance Key is missing. Channel is currently in setup mode.'
+        message: 'Cannot send live message: WAME Instance Key is missing.'
       };
     }
 
-    const sanitizedTo = to.replace(/[^\d+]/g, '');
+    const cleanNumber = to.replace(/@.*$/, '').replace(/\D/g, '');
+    const targetTo = provider === 'whatsapp' ? cleanNumber : to.trim();
 
-    const payload: WameSendTextRequest = {
-      to: sanitizedTo || to,
-      text
+    if (!targetTo) {
+      return {
+        status: 400,
+        error: 'INVALID_RECIPIENT',
+        message: 'Destinatário inválido para envio.'
+      };
+    }
+
+    const payload = {
+      to: targetTo,
+      text: text.trim(),
+      provider
     };
 
     try {
@@ -282,20 +296,21 @@ export class WameClient {
         body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        console.error('[WAME_SEND_TEXT_ERROR]', response.status, result);
         return {
           status: response.status,
           error: result.error || 'WAME_SEND_FAILED',
-          message: result.message || 'Failed to dispatch message through WAME.'
+          message: result.message || `Failed to dispatch message through WAME (HTTP ${response.status}).`
         };
       }
 
       return {
         status: 200,
         data: {
-          messageId: result.data?.id || result.id || `wame_${Date.now()}`
+          messageId: result.data?.id || result.id || result.key?.id || `wame_${Date.now()}`
         }
       };
     } catch (err: unknown) {
@@ -305,6 +320,65 @@ export class WameClient {
         error: 'NETWORK_ERROR',
         message: errorMessage
       };
+    }
+  }
+
+  /**
+   * Fetch specific contact information and real WhatsApp profile photo
+   * Endpoint: GET https://server.wame.api.br/{KEY}/contacts/{number}
+   */
+  async getContact(number: string): Promise<{ id?: string; name?: string; notify?: string; imgUrl?: string } | null> {
+    if (!this.instanceKey || !number) return null;
+    const cleanNumber = number.replace(/@.*$/, '').replace(/\D/g, '');
+    if (!cleanNumber) return null;
+
+    try {
+      // 1. Try GET /{KEY}/contacts/{number}
+      const response = await fetch(`${this.baseUrl}/${this.instanceKey}/contacts/${cleanNumber}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
+      });
+
+      if (response.ok) {
+        const json = await response.json().catch(() => ({}));
+        const data = json.data || json;
+        const photo = data?.imgUrl || data?.image || data?.profilePictureUrl;
+        if (photo || data?.name || data?.notify) {
+          return {
+            id: data.id || `${cleanNumber}@s.whatsapp.net`,
+            name: data.name || data.notify,
+            notify: data.notify,
+            imgUrl: photo
+          };
+        }
+      }
+
+      // 2. Fallback to GET /{KEY}/chat/profile-picture?jid={number}@s.whatsapp.net
+      const picRes = await fetch(
+        `${this.baseUrl}/${this.instanceKey}/chat/profile-picture?jid=${encodeURIComponent(`${cleanNumber}@s.whatsapp.net`)}`,
+        {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store'
+        }
+      );
+
+      if (picRes.ok) {
+        const picJson = await picRes.json().catch(() => ({}));
+        const photo = picJson.profilePictureUrl || picJson.image || picJson.imgUrl || picJson.data?.imgUrl;
+        if (photo) {
+          return {
+            id: `${cleanNumber}@s.whatsapp.net`,
+            imgUrl: photo
+          };
+        }
+      }
+
+      return null;
+    } catch (err) {
+      console.warn('[WAME_GET_CONTACT_WARN]', err);
+      return null;
     }
   }
 

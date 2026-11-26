@@ -51,10 +51,13 @@ async function handleSync(req: NextRequest) {
 
     let conversations: Conversation[] = [];
     const messagesRecord: Record<string, Message[]> = {};
+    const contactMap: Record<string, { name?: string; imgUrl?: string }> = {};
+
+    let client: WameClient | null = null;
 
     // 1. Tentar consultar a API WAME se houver instanceKey
-    if (instanceKey && !instanceKey.includes('INSTANCE_8941')) {
-      const client = new WameClient(instanceKey, baseUrl || undefined);
+    if (instanceKey) {
+      client = new WameClient(instanceKey, baseUrl || undefined);
 
       try {
         // 1.1 Consultar status e perfil do usuário WhatsApp conectado
@@ -110,13 +113,16 @@ async function handleSync(req: NextRequest) {
 
         // 1.2 Obter contatos para associar fotos de perfil aos chats
         const rawContacts = await client.getContacts().catch(() => []);
-        const contactMap: Record<string, { name?: string; imgUrl?: string }> = {};
 
         for (const c of rawContacts) {
           if (c.id) {
-            const cleanId = c.id.replace(/@.*$/, '');
-            contactMap[c.id] = { name: c.name || c.notify, imgUrl: c.imgUrl };
-            contactMap[cleanId] = { name: c.name || c.notify, imgUrl: c.imgUrl };
+            const cleanId = c.id.replace(/@.*$/, '').replace(/\D/g, '');
+            const photo = c.imgUrl || (c as any).image || (c as any).profilePictureUrl;
+            contactMap[c.id] = { name: c.name || c.notify, imgUrl: photo };
+            contactMap[cleanId] = { name: c.name || c.notify, imgUrl: photo };
+            if (photo) {
+              liveStore.setContactPicture(cleanId, photo);
+            }
           }
         }
 
@@ -125,16 +131,26 @@ async function handleSync(req: NextRequest) {
 
         if (Array.isArray(rawChats) && rawChats.length > 0) {
           // Processar os chats do WhatsApp
-          for (let i = 0; i < Math.min(rawChats.length, 15); i++) {
+          for (let i = 0; i < Math.min(rawChats.length, 25); i++) {
             const chat = rawChats[i];
-            const cleanPhone = chat.id.replace(/@.*$/, '');
+            const cleanPhone = chat.id.replace(/@.*$/, '').replace(/\D/g, '');
             const convId = `conv-${cleanPhone || i}`;
 
             const contactInfo = contactMap[chat.id] || contactMap[cleanPhone] || {};
-            const contactName = chat.name || contactInfo.name || `+${cleanPhone}`;
-            const avatarUrl =
-              contactInfo.imgUrl ||
-              `https://images.unsplash.com/photo-${1534528741775 + (i * 12345)}?w=150&auto=format&fit=crop&q=80`;
+            const contactName = chat.name || contactInfo.name || (cleanPhone ? `+${cleanPhone}` : 'Contato WhatsApp');
+
+            let avatarUrl = contactInfo.imgUrl || liveStore.getContactPicture(cleanPhone);
+            if (!avatarUrl) {
+              const directContact = await client.getContact(cleanPhone).catch(() => null);
+              if (directContact?.imgUrl) {
+                avatarUrl = directContact.imgUrl;
+                liveStore.setContactPicture(cleanPhone, directContact.imgUrl);
+              }
+            }
+
+            if (!avatarUrl) {
+              avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(contactName)}&background=252B28&color=45D483`;
+            }
 
             const dateObj = chat.timestamp ? new Date(chat.timestamp * 1000) : new Date();
             const timeStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -249,6 +265,25 @@ async function handleSync(req: NextRequest) {
           messagesRecord[convId].push(mappedMsg);
         }
 
+        const cleanFrom = event.from.replace(/@.*$/, '').replace(/\D/g, '');
+        let eventAvatar =
+          contactMap[event.from]?.imgUrl ||
+          contactMap[cleanFrom]?.imgUrl ||
+          liveStore.getContactPicture(cleanFrom) ||
+          null;
+
+        if (!eventAvatar && client) {
+          const direct = await client.getContact(cleanFrom).catch(() => null);
+          if (direct?.imgUrl) {
+            eventAvatar = direct.imgUrl;
+            liveStore.setContactPicture(cleanFrom, direct.imgUrl);
+          }
+        }
+
+        if (!eventAvatar) {
+          eventAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(event.senderName || cleanFrom || 'Contato')}&background=252B28&color=45D483`;
+        }
+
         // Encontrar ou criar a conversa na lista
         const existingConv = conversations.find((c) => c.id === convId);
         if (existingConv) {
@@ -256,6 +291,9 @@ async function handleSync(req: NextRequest) {
           existingConv.lastMessageAt = msgTime;
           existingConv.lastMessageTimestamp = event.timestampMs;
           existingConv.unreadCount = (existingConv.unreadCount || 0) + 1;
+          if (eventAvatar && (!existingConv.contact.avatarUrl || existingConv.contact.avatarUrl.includes('unsplash'))) {
+            existingConv.contact.avatarUrl = eventAvatar;
+          }
         } else {
           conversations.unshift({
             id: convId,
@@ -263,14 +301,14 @@ async function handleSync(req: NextRequest) {
             channelId: event.channelType === 'instagram' ? '33333333-3333-4333-8333-333333333333' : '22222222-2222-4222-8222-222222222222',
             channelType: event.channelType,
             contact: {
-              id: `cnt-${event.from.replace(/[^\w]/g, '')}`,
+              id: `cnt-${cleanFrom || event.from.replace(/[^\w]/g, '')}`,
               organizationId: '11111111-1111-4111-8111-111111111111',
-              name: event.senderName || event.from,
-              phone: event.channelType === 'whatsapp' ? event.from : undefined,
+              name: event.senderName || (cleanFrom ? `+${cleanFrom}` : event.from),
+              phone: event.channelType === 'whatsapp' ? (cleanFrom ? `+${cleanFrom}` : event.from) : undefined,
               instagramUsername: event.channelType === 'instagram' ? event.from : undefined,
-              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+              avatarUrl: eventAvatar,
               leadStatus: 'lead',
-              tags: [{ id: 'tag-live', name: 'WAME Ao Vivo', color: '#45D483' }],
+              tags: [{ id: 'tag-live', name: 'WhatsApp', color: '#45D483' }],
               customFields: {},
               createdAt: new Date().toISOString()
             },

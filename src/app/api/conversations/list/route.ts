@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/client';
+import { liveStore } from '@/lib/wame/live-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,7 +86,11 @@ export async function GET() {
           name: contactObj.name || 'Contato WAME',
           phone: contactObj.phone || '',
           instagramUsername: contactObj.instagram_username || '',
-          avatarUrl: contactObj.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          avatarUrl:
+            (contactObj.avatar_url && !contactObj.avatar_url.includes('unsplash.com'))
+              ? contactObj.avatar_url
+              : (liveStore.getContactPicture((contactObj.phone || '').replace(/\D/g, '')) ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(contactObj.name || contactObj.phone || 'Contato')}&background=252B28&color=45D483`),
           leadStatus: contactObj.lead_status || 'lead',
           tags: [{ id: 'tag-1', name: 'WAME Live', color: '#45D483' }],
           notes: contactObj.notes || '',

@@ -21,7 +21,8 @@ import {
   ConversationStatus,
   AIStatus,
   MessageType,
-  UserProfile
+  UserProfile,
+  LeadStatus
 } from '@/types';
 import {
   initialOrganization,
@@ -100,6 +101,18 @@ interface MoonkyStoreContextType {
   addInternalNote: (convId: string, content: string) => void;
   addContact: (contact: Partial<Contact>) => void;
   updateContact: (id: string, contact: Partial<Contact>) => void;
+  saveContact: (
+    contactId: string,
+    data: {
+      name: string;
+      phone?: string;
+      email?: string;
+      tags?: { id: string; name: string; color: string }[];
+      notes?: string;
+      avatarUrl?: string;
+      leadStatus?: LeadStatus;
+    }
+  ) => void;
   toggleAutomation: (id: string) => void;
   addAutomation: (automation: AutomationRule) => void;
   updateKnowledgeItem: (id: string, item: Partial<AIKnowledgeItem>) => void;
@@ -531,11 +544,14 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
     // 2. Despachar via API Oficial WAME (WhatsApp / Instagram Direct)
     try {
       let instKey = '';
+      let baseUrl = '';
       if (typeof window !== 'undefined') {
         try {
           const savedCreds = localStorage.getItem('moonky_wame_credentials');
           if (savedCreds) {
-            instKey = JSON.parse(savedCreds).instanceKey || '';
+            const parsed = JSON.parse(savedCreds);
+            instKey = parsed.instanceKey || '';
+            baseUrl = parsed.baseUrl || '';
           }
         } catch {}
       }
@@ -544,14 +560,22 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         instKey = wa?.instanceKey || '';
       }
 
+      const targetRecipient =
+        activeConversation?.contact.phone ||
+        activeConversation?.contact.name ||
+        activeConversation?.contact.instagramUsername ||
+        '';
+
       fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId: activeConversationId,
           content: content.trim(),
-          recipient: activeConversation?.contact.phone || activeConversation?.contact.instagramUsername,
-          instanceKey: instKey
+          recipient: targetRecipient,
+          instanceKey: instKey,
+          baseUrl,
+          channelType: activeConversation?.channelType || 'whatsapp'
         })
       }).catch((e) => console.log('Outgoing dispatch recorded', e));
     } catch (e) {
@@ -665,11 +689,14 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       // Despachar para o WhatsApp via WAME API
       try {
         let instKey = '';
+        let baseUrl = '';
         if (typeof window !== 'undefined') {
           try {
             const savedCreds = localStorage.getItem('moonky_wame_credentials');
             if (savedCreds) {
-              instKey = JSON.parse(savedCreds).instanceKey || '';
+              const parsed = JSON.parse(savedCreds);
+              instKey = parsed.instanceKey || '';
+              baseUrl = parsed.baseUrl || '';
             }
           } catch {}
         }
@@ -685,7 +712,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
             conversationId: convId,
             content: initialMessage.trim(),
             recipient: cleanTarget,
-            instanceKey: instKey
+            instanceKey: instKey,
+            baseUrl,
+            channelType
           })
         }).catch((e) => console.log('Outgoing dispatch recorded', e));
       } catch (e) {
@@ -890,7 +919,9 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
       email: newContact.email,
       avatarUrl:
         newContact.avatarUrl ||
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        (newContact.name
+          ? `https://ui-avatars.com/api/?name=${encodeURIComponent(newContact.name)}&background=252B28&color=45D483`
+          : 'https://ui-avatars.com/api/?name=Contato&background=252B28&color=45D483'),
       leadStatus: newContact.leadStatus || 'lead',
       tags: newContact.tags || [{ id: 'tag-new', name: 'New Lead', color: '#45D483' }],
       customFields: newContact.customFields || {},
@@ -909,6 +940,107 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
           : conv
       )
     );
+  };
+
+  const saveContact = (
+    contactId: string,
+    data: {
+      name: string;
+      phone?: string;
+      email?: string;
+      tags?: { id: string; name: string; color: string }[];
+      notes?: string;
+      avatarUrl?: string;
+      leadStatus?: LeadStatus;
+    }
+  ) => {
+    const cleanPhoneDigits = (data.phone || '').replace(/\D/g, '');
+
+    setContacts((prev) => {
+      const idx = prev.findIndex(
+        (c) =>
+          c.id === contactId ||
+          (cleanPhoneDigits && c.phone && c.phone.replace(/\D/g, '') === cleanPhoneDigits)
+      );
+
+      let updated: Contact[];
+      if (idx >= 0) {
+        updated = prev.map((c, i) =>
+          i === idx
+            ? {
+                ...c,
+                name: data.name.trim(),
+                phone: data.phone?.trim() || c.phone,
+                email: data.email?.trim() || c.email,
+                tags: data.tags || c.tags,
+                notes: data.notes !== undefined ? data.notes : c.notes,
+                avatarUrl: data.avatarUrl || c.avatarUrl,
+                leadStatus: data.leadStatus || c.leadStatus
+              }
+            : c
+        );
+      } else {
+        const newC: Contact = {
+          id: contactId || `cnt-${Date.now()}`,
+          organizationId: initialOrganization.id,
+          name: data.name.trim(),
+          phone: data.phone?.trim(),
+          email: data.email?.trim(),
+          avatarUrl:
+            data.avatarUrl ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name.trim())}&background=252B28&color=45D483`,
+          leadStatus: data.leadStatus || 'lead',
+          tags: data.tags || [{ id: 'tag-saved', name: 'Salvo', color: '#10B981' }],
+          notes: data.notes || '',
+          customFields: {},
+          createdAt: new Date().toISOString()
+        };
+        updated = [newC, ...prev];
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_contacts_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+
+    setConversations((prev) => {
+      const updated = prev.map((conv) => {
+        const convPhoneDigits = (conv.contact.phone || '').replace(/\D/g, '');
+        const convNameDigits = conv.contact.name.replace(/\D/g, '');
+        const match =
+          conv.contact.id === contactId ||
+          (cleanPhoneDigits && convPhoneDigits && convPhoneDigits === cleanPhoneDigits) ||
+          (cleanPhoneDigits && convNameDigits && convNameDigits === cleanPhoneDigits) ||
+          conv.contact.name === data.phone;
+
+        if (match) {
+          return {
+            ...conv,
+            contact: {
+              ...conv.contact,
+              name: data.name.trim(),
+              phone: data.phone?.trim() || conv.contact.phone,
+              email: data.email?.trim() || conv.contact.email,
+              tags: data.tags || conv.contact.tags,
+              notes: data.notes !== undefined ? data.notes : conv.contact.notes,
+              avatarUrl: data.avatarUrl || conv.contact.avatarUrl,
+              leadStatus: data.leadStatus || conv.contact.leadStatus
+            }
+          };
+        }
+        return conv;
+      });
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('moonky_conversations_v4', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
   };
 
   const toggleAutomation = (id: string) => {
@@ -1218,6 +1350,7 @@ export function MoonkyStoreProvider({ children }: { children: React.ReactNode })
         addInternalNote,
         addContact,
         updateContact,
+        saveContact,
         toggleAutomation,
         addAutomation,
         updateKnowledgeItem,

@@ -50,10 +50,11 @@ import {
   Check,
   CheckCircle2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  UserPlus
 } from 'lucide-react';
 import { useMoonky } from '@/context/moonky-store';
-import { Message, MessageType, Contact, ChannelType, Conversation } from '@/types';
+import { Message, MessageType, Contact, ChannelType, Conversation, LeadStatus } from '@/types';
 
 interface InboxViewProps {
   onOpenConnectModal?: () => void;
@@ -86,7 +87,8 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     deleteConversation,
     currentUser,
     syncWithWame,
-    startNewConversation
+    startNewConversation,
+    saveContact
   } = useMoonky();
 
   // Estados de entrada e abas
@@ -102,6 +104,16 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
   const [newChatMessage, setNewChatMessage] = useState('');
   const [isSubmittingNewChat, setIsSubmittingNewChat] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+
+  // Estados para Salvar Contato Não Salvo
+  const [isSaveContactModalOpen, setIsSaveContactModalOpen] = useState(false);
+  const [contactToSave, setContactToSave] = useState<Contact | null>(null);
+  const [saveName, setSaveName] = useState('');
+  const [savePhone, setSavePhone] = useState('');
+  const [saveEmail, setSaveEmail] = useState('');
+  const [saveNotes, setSaveNotes] = useState('');
+  const [saveLeadStatus, setSaveLeadStatus] = useState<LeadStatus>('customer');
+  const [saveSuccessToast, setSaveSuccessToast] = useState(false);
 
   // Estados de Menu de Contexto Minimalista de Mensagens
   const [contextMenu, setContextMenu] = useState<{
@@ -517,6 +529,55 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
     } finally {
       setIsSubmittingNewChat(false);
     }
+  };
+
+  const isContactUnsaved = (contact?: Contact | null): boolean => {
+    if (!contact) return false;
+    const cleanName = (contact.name || '').trim();
+    const rawDigits = cleanName.replace(/\D/g, '');
+    // Se o nome é apenas o telefone ou dígitos
+    if (rawDigits.length >= 8 && (cleanName === contact.phone || /^[+\d\s()-]+$/.test(cleanName))) {
+      return true;
+    }
+    if (
+      contact.tags?.some(
+        (t) =>
+          t.id === 'tag-unsaved' ||
+          t.name.toLowerCase() === 'não salvo' ||
+          t.name.toLowerCase() === 'nao salvo'
+      )
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const openSaveContactModal = (contact: Contact) => {
+    setContactToSave(contact);
+    const unsaved = isContactUnsaved(contact);
+    setSaveName(unsaved ? '' : contact.name);
+    setSavePhone(contact.phone || contact.name || '');
+    setSaveEmail(contact.email || '');
+    setSaveNotes(contact.notes || '');
+    setSaveLeadStatus(contact.leadStatus || 'customer');
+    setIsSaveContactModalOpen(true);
+  };
+
+  const handleSaveContactSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!contactToSave) return;
+    const finalName = saveName.trim() || savePhone.trim() || contactToSave.name;
+    saveContact(contactToSave.id, {
+      name: finalName,
+      phone: savePhone.trim() || contactToSave.phone,
+      email: saveEmail.trim() || undefined,
+      notes: saveNotes.trim(),
+      leadStatus: saveLeadStatus,
+      tags: [{ id: 'tag-saved', name: 'Cliente Salvo', color: '#10B981' }]
+    });
+    setIsSaveContactModalOpen(false);
+    setSaveSuccessToast(true);
+    setTimeout(() => setSaveSuccessToast(false), 3500);
   };
 
   // Fechar menus de contexto ao clicar fora ou pressionar Escape
@@ -948,6 +1009,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                         src={conv.contact.avatarUrl}
                         alt={conv.contact.name}
                         className="w-11 h-11 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.onerror = null;
+                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.contact.name)}&background=252B28&color=45D483`;
+                        }}
                       />
                       <div
                         className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-xs ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center"
@@ -1028,6 +1094,11 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                     src={activeConversation.contact.avatarUrl}
                     alt={activeConversation.contact.name}
                     className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.onerror = null;
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activeConversation.contact.name)}&background=252B28&color=45D483`;
+                    }}
                   />
                   <div
                     className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#151917] p-0.5 shadow-xs ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center"
@@ -1061,7 +1132,7 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 </div>
               </div>
 
-              {/* Ações do Cabeçalho: Vídeo, Voz, IA, Gaveta */}
+              {/* Ações do Cabeçalho: Vídeo, Voz, Salvar Contato, IA, Gaveta */}
               <div className="flex items-center gap-2">
                 {/* Botão de Chamada de Vídeo */}
                 <button
@@ -1087,6 +1158,26 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                   className="w-9 h-9 rounded-full flex items-center justify-center text-[#252B28] bg-[#F1F3F2] hover:bg-[#45D483] hover:text-[#252B28] transition-all shadow-xs"
                 >
                   <Phone className="w-4 h-4" />
+                </button>
+
+                {/* Botão de Salvar Contato (se não salvo ou para editar) */}
+                <button
+                  onClick={() => openSaveContactModal(activeConversation.contact)}
+                  title={
+                    isContactUnsaved(activeConversation.contact)
+                      ? 'Salvar este contato na sua agenda Moonky'
+                      : 'Editar dados do contato'
+                  }
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                    isContactUnsaved(activeConversation.contact)
+                      ? 'bg-[#45D483] text-[#151917] hover:bg-[#3bc275]'
+                      : 'bg-[#F1F3F2] dark:bg-[#262E2A] text-[#252B28] dark:text-[#F3F6F4] hover:bg-[#45D483] hover:text-[#151917]'
+                  }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>
+                    {isContactUnsaved(activeConversation.contact) ? 'Salvar Contato' : 'Editar Contato'}
+                  </span>
                 </button>
 
                 <div className="h-5 w-[1px] bg-[#E5E9E7] mx-1" />
@@ -1123,6 +1214,30 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 </button>
               </div>
             </div>
+
+            {/* AVISO DE CONTATO NÃO SALVO NA AGENDA */}
+            {isContactUnsaved(activeConversation.contact) && (
+              <div className="bg-[#45D483]/10 dark:bg-[#45D483]/15 border-b border-[#45D483]/25 px-6 py-2.5 flex items-center justify-between text-xs text-[#252B28] dark:text-[#F3F6F4] shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-[#45D483]/20 flex items-center justify-center text-[#1E7E49] dark:text-[#45D483] shrink-0">
+                    <UserPlus className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#1E7E49] dark:text-[#45D483]">Número Não Salvo:</span>{' '}
+                    <span>
+                      O número <strong>{activeConversation.contact.phone || activeConversation.contact.name}</strong> ainda não está salvo na sua agenda Moonky.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => openSaveContactModal(activeConversation.contact)}
+                  className="px-3.5 py-1.5 bg-[#45D483] hover:bg-[#3bc275] text-[#151917] font-bold rounded-xl text-xs transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Salvar Contato</span>
+                </button>
+              </div>
+            )}
 
             {/* BARRA MINIMALISTA DE MENSAGENS FIXADAS NO TOPO DO CHAT (ATÉ 5) */}
             {pinnedMessages.length > 0 && (
@@ -1785,7 +1900,12 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                 <img
                   src={activeConversation.contact.avatarUrl}
                   alt={activeConversation.contact.name}
-                  className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-white shadow-md"
+                  className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-white dark:border-[#262E2A] shadow-md"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.onerror = null;
+                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(activeConversation.contact.name)}&background=252B28&color=45D483`;
+                  }}
                 />
                 <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white dark:bg-[#151917] p-1 shadow-md ring-2 ring-white dark:ring-[#151917] flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1816,6 +1936,26 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
                   />
                   <span>{activeConversation.channelType === 'whatsapp' ? 'WhatsApp Oficial' : 'Instagram Direct'}</span>
                 </span>
+              </div>
+
+              {/* Botão de Salvar Contato na Gaveta */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => openSaveContactModal(activeConversation.contact)}
+                  className={`w-full py-2 px-3 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer ${
+                    isContactUnsaved(activeConversation.contact)
+                      ? 'bg-[#45D483] hover:bg-[#3bc275] text-[#151917]'
+                      : 'bg-[#F1F3F2] dark:bg-[#262E2A] hover:bg-[#45D483] hover:text-[#151917] text-[#252B28] dark:text-[#F3F6F4]'
+                  }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>
+                    {isContactUnsaved(activeConversation.contact)
+                      ? 'Salvar Contato na Agenda'
+                      : 'Editar Dados do Contato'}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -2407,6 +2547,160 @@ export function InboxView({ onOpenConnectModal }: InboxViewProps = {}) {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Modal: Salvar Contato Não Salvo */}
+      {isSaveContactModalOpen && contactToSave && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#151917] border border-[#E5E9E7] dark:border-[#262E2A] rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#EAFBF2] dark:bg-[#45D483]/20 text-[#1E7E49] dark:text-[#45D483] flex items-center justify-center">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-[#252B28] dark:text-white">
+                    {isContactUnsaved(contactToSave) ? 'Salvar Novo Contato' : 'Editar Contato'}
+                  </h3>
+                  <p className="text-[11px] text-[#AEB7B3]">
+                    Adicione à sua agenda de clientes na plataforma Moonky
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSaveContactModalOpen(false)}
+                className="w-7 h-7 rounded-full bg-[#F1F3F2] dark:bg-[#1D2320] text-[#6C7671] hover:text-[#252B28] flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-[#F7F9F8] dark:bg-[#1D2320] rounded-2xl border border-[#E5E9E7]/60 dark:border-[#262E2A]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={contactToSave.avatarUrl}
+                alt="Avatar"
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#45D483]"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.onerror = null;
+                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(saveName || contactToSave.name)}&background=252B28&color=45D483`;
+                }}
+              />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#252B28] dark:text-[#F3F6F4] truncate">
+                  {saveName || contactToSave.name}
+                </p>
+                <p className="text-[11px] text-[#AEB7B3] truncate">
+                  {contactToSave.phone || contactToSave.name}
+                </p>
+                <span className="text-[10px] text-[#1E7E49] dark:text-[#45D483] font-semibold">
+                  Foto original do WhatsApp
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveContactSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Nome do Contato / Cliente *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: João da Silva / Clínica Odonto"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2.5 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483]"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Telefone / WhatsApp
+                </label>
+                <input
+                  type="text"
+                  placeholder="+55 11 99999-9999"
+                  value={savePhone}
+                  onChange={(e) => setSavePhone(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  E-mail (opcional)
+                </label>
+                <input
+                  type="email"
+                  placeholder="cliente@email.com"
+                  value={saveEmail}
+                  onChange={(e) => setSaveEmail(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Status no Funil
+                </label>
+                <select
+                  value={saveLeadStatus}
+                  onChange={(e) => setSaveLeadStatus(e.target.value as any)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483]"
+                >
+                  <option value="lead">Lead / Primeiro Contato</option>
+                  <option value="qualified">Lead Qualificado</option>
+                  <option value="customer">Cliente Ativo</option>
+                  <option value="churned">Inativo</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#6C7671] dark:text-[#AEB7B3] mb-1">
+                  Observações Internas (opcional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Informações relevantes sobre este contato..."
+                  value={saveNotes}
+                  onChange={(e) => setSaveNotes(e.target.value)}
+                  className="w-full bg-[#F7F9F8] dark:bg-[#1D2320] border border-[#E5E9E7] dark:border-[#262E2A] rounded-xl px-3 py-2 text-xs text-[#252B28] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#45D483] resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSaveContactModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#6C7671] hover:bg-[#F1F3F2] dark:hover:bg-[#1D2320] transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#45D483] hover:bg-[#3bc275] text-[#151917] font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Salvar Contato</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Flutuante de Confirmação */}
+      {saveSuccessToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#151917] dark:bg-[#262E2A] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 border border-[#45D483]/30 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="w-6 h-6 rounded-full bg-[#45D483]/20 text-[#45D483] flex items-center justify-center">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-semibold">Contato salvo com sucesso na agenda Moonky!</span>
         </div>
       )}
     </div>
